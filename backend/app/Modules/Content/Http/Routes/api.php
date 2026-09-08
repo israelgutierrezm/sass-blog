@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use App\Modules\Content\Http\Controllers\AuthorController;
 use App\Modules\Content\Http\Controllers\CategoryController;
+use App\Modules\Content\Http\Controllers\CollectionController;
+use App\Modules\Content\Http\Controllers\EntryController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -15,6 +17,18 @@ Route::middleware(['auth:sanctum', 'workspace', 'capability:cms.collections'])
     ->prefix('workspaces/{workspace}/sites/{site}')
     ->name('content.')
     ->group(function (): void {
+        // Colecciones (schema estructural).
+        Route::get('collections', [CollectionController::class, 'index'])->name('collections.index');
+        Route::post('collections', [CollectionController::class, 'store'])->name('collections.store');
+        Route::get('collections/{collection}', [CollectionController::class, 'show'])->name('collections.show');
+        Route::patch('collections/{collection}', [CollectionController::class, 'update'])->name('collections.update');
+
+        // Entries (borrador), anidadas bajo su colección.
+        Route::get('collections/{collection}/entries', [EntryController::class, 'index'])->name('entries.index');
+        Route::post('collections/{collection}/entries', [EntryController::class, 'store'])->name('entries.store');
+        Route::get('collections/{collection}/entries/{entry}', [EntryController::class, 'show'])->name('entries.show');
+        Route::patch('collections/{collection}/entries/{entry}', [EntryController::class, 'update'])->name('entries.update');
+
         // Autores (nivel site).
         Route::get('authors', [AuthorController::class, 'index'])->name('authors.index');
         Route::post('authors', [AuthorController::class, 'store'])->name('authors.store');

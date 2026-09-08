@@ -100,6 +100,24 @@ listener `SiteCreated`): colección `kind=article`, `route_prefix='blog'`, campo
 Pruebas transversales: aislamiento por-site (entries, pivote, referencias), anti-N+1,
 `$bind` maliciosos → 422, gating Free-403/Pro-200, verificado por mutación.
 
+### Notas de implementación (sub-slices 6–7)
+
+- **Categorías anidadas bajo su colección** (`collections/{collection}/categories`), no
+  a nivel-site plano: `collection_id` es intrínseco y su unicidad es por colección.
+- **Formato de `key` de campo** validado en `StoreCollectionRequest`
+  (`^[a-z][a-z0-9_]*$`): cierra la deuda de ADR-010 (sin puntos ni comodines). `type`
+  restringido al catálogo cerrado `FieldType`. La mutación de campos en `update` se
+  difiere (sólo metadatos); crear campos `relation` vía API también se difiere.
+- **Payload de campos de la entry expuesto como `values`** (la columna es `data`): una
+  clave `data` en el Resource colisiona con el envoltorio `data` de Laravel y devuelve
+  la respuesta sin envolver. Simétrico en entrada/salida.
+- **RBAC**: owner/admin crean/editan colecciones y publican; editor crea/edita entries
+  y gestiona autores/categorías pero **no** colecciones; viewer sólo lee. `entry.publish`
+  llega en el sub-slice 8.
+- **`{}` vs `[]` en `data`**: para MVP se almacena el arreglo validado (un campo `json`
+  con objeto vacío se guarda como `[]`); igual que la limitación conocida de PHP. Se
+  revisará si algún campo `json` necesita preservar objeto vacío.
+
 ## Deuda MVP declarada
 
 Entries mutables sin versionado · richtext = texto plano (sin v-html/sanitizador) · media = URL
