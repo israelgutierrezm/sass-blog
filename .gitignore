@@ -1,0 +1,32 @@
+# ---- Dependencies ----
+node_modules/
+vendor/
+
+# ---- Environment ----
+.env
+.env.*
+!.env.example
+
+# ---- Build outputs ----
+dist/
+admin/dist/
+renderer/.nuxt/
+renderer/.output/
+packages/*/dist/
+
+# ---- Logs / cache ----
+*.log
+.pnpm-debug.log*
+.cache/
+coverage/
+
+# ---- OS / editors ----
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# ---- Laravel (backend/ keeps its own .gitignore too) ----
+backend/storage/*.key
+/.php-cs-fixer.cache

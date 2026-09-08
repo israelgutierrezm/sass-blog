@@ -1,0 +1,54 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Registro de módulos
+    |--------------------------------------------------------------------------
+    |
+    | Mapa declarativo de los módulos del monolito modular. Única fuente de verdad
+    | sobre qué módulos EXISTEN. El cargador (App\Providers\ModuleServiceProvider)
+    | recorre este registro —nunca el sistema de archivos— para enganchar cada
+    | módulo. Una carpeta creada por error no se convierte en módulo cargado en
+    | silencio: si un módulo existe, está declarado aquí.
+    |
+    | 'layer':
+    |   kernel  → shared kernel; no depende de ningún módulo de dominio.
+    |   domain  → módulos de dominio; pueden depender del kernel.
+    |
+    | 'depends_on': módulos de DOMINIO de los que este módulo puede depender en
+    | código. El kernel es dependible por todos, así que no se lista.
+    |
+    | 'label': nombre en español para la interfaz (el identificador es inglés
+    | porque es código; ver CLAUDE.md, sección Idioma).
+    |
+    */
+
+    'modules' => [
+        'Shared' => ['layer' => 'kernel', 'label' => 'General',        'depends_on' => []],
+        'Tenancy' => ['layer' => 'kernel', 'label' => 'Espacios',       'depends_on' => []],
+        'Identity' => ['layer' => 'kernel', 'label' => 'Identidad',      'depends_on' => []],
+        'Audit' => ['layer' => 'kernel', 'label' => 'Auditoría',      'depends_on' => []],
+        'Sites' => ['layer' => 'domain', 'label' => 'Sitios',         'depends_on' => []],
+        'Billing' => ['layer' => 'domain', 'label' => 'Planes y cobro', 'depends_on' => []],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Rutas de API
+    |--------------------------------------------------------------------------
+    |
+    | Prefijo versionado desde el día uno. El cambio a v2 será aditivo: se registra
+    | un segundo prefijo, nunca se muta este.
+    |
+    */
+
+    'api' => [
+        'prefix' => 'api/v1',
+        'name_prefix' => 'api.v1.',
+    ],
+
+];

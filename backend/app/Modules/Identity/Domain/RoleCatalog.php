@@ -1,0 +1,45 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Modules\Identity\Domain;
+
+/**
+ * Catálogo CERRADO de roles y permisos de workspace (RBAC).
+ *
+ * Fuente única de verdad usada por el seeder y por el provisionador de RBAC de
+ * cada workspace. El tenant combina permisos en roles a través de este catálogo;
+ * no inventa permisos sueltos.
+ */
+final class RoleCatalog
+{
+    /**
+     * Rol => permisos. El rol activo (no la suma) es el que autoriza (teams=workspace).
+     *
+     * @var array<string, list<string>>
+     */
+    public const ROLES = [
+        'owner' => ['workspace.view', 'workspace.update', 'member.manage', 'site.view', 'site.create', 'site.update', 'site.delete'],
+        'admin' => ['workspace.view', 'member.manage', 'site.view', 'site.create', 'site.update', 'site.delete'],
+        'editor' => ['workspace.view', 'site.view', 'site.create', 'site.update'],
+        'viewer' => ['workspace.view', 'site.view'],
+    ];
+
+    /**
+     * Todos los permisos del catálogo, sin repetir.
+     *
+     * @return list<string>
+     */
+    public static function permissions(): array
+    {
+        return array_values(array_unique(array_merge(...array_values(self::ROLES))));
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function roles(): array
+    {
+        return array_keys(self::ROLES);
+    }
+}
