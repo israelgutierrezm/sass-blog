@@ -1,6 +1,6 @@
 # JS/TS workspaces del monorepo.
 # El backend (Laravel) NO es un workspace de pnpm; vive en /backend con Composer.
-# admin/ se añade cuando se cree (sub-slices 10-11 de FASE 2).
 packages:
   - "packages/*"
+  - "admin"
   - "renderer"

@@ -115,6 +115,21 @@ it('una página de otro site del mismo workspace no se resuelve (404)', function
     $this->getJson(pagesUrl($ws, $siteB)."/{$page->ulid}")->assertNotFound();
 });
 
+it('la respuesta preserva settings vacío como objeto {} (round-trip del admin)', function () {
+    ['user' => $u, 'ws' => $ws, 'site' => $site] = ownerWithSite();
+    $page = makePage($ws, $site);
+    Sanctum::actingAs($u);
+
+    $schema = ['schema_version' => 1, 'sections' => [[
+        'id' => '01ARZ3NDEKTSV4RRFFQ69G5FAV', 'type' => 'hero', 'variant' => 'hero-minimal',
+        'visible' => true, 'props' => ['heading' => 'X'], 'settings' => (object) [],
+    ]]];
+    $this->patchJson(pagesUrl($ws, $site)."/{$page->ulid}", ['schema' => $schema])->assertOk();
+
+    $content = $this->getJson(pagesUrl($ws, $site)."/{$page->ulid}")->assertOk()->getContent();
+    expect($content)->toContain('"settings":{}');
+});
+
 it('preview-link devuelve una URL firmada', function () {
     ['user' => $u, 'ws' => $ws, 'site' => $site] = ownerWithSite();
     $page = makePage($ws, $site);

@@ -21,7 +21,10 @@ final class RenderedPage
         $site = $page->site;
         $settings = is_array($site->settings) ? $site->settings : [];
         $baseUrl = isset($settings['base_url']) && is_string($settings['base_url']) ? $settings['base_url'] : '';
-        $schema = is_array($version->schema) ? $version->schema : [];
+
+        // Desde el JSON CRUDO: preserva los objetos {} de settings/props vacíos.
+        $decoded = json_decode((string) $version->getRawOriginal('schema'));
+        $sections = ($decoded instanceof \stdClass && isset($decoded->sections)) ? $decoded->sections : [];
 
         return [
             'site' => [
@@ -33,7 +36,7 @@ final class RenderedPage
                 'path' => $page->path,
                 'version_id' => $version->ulid,
                 'schema_version' => $version->schema_version,
-                'sections' => $schema['sections'] ?? [],
+                'sections' => $sections,
             ],
             'seo' => [
                 'title' => $page->title,
