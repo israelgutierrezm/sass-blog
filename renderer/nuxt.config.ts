@@ -3,6 +3,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-01-01',
   ssr: true,
   devtools: { enabled: false },
+  devServer: { host: '127.0.0.1', port: 3000 },
 
   // Los paquetes del workspace se consumen por SOURCE (SFC/TS): Nuxt los transpila.
   build: {

@@ -5,6 +5,7 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   plugins: [vue(), tailwindcss()],
   server: {
+    host: '127.0.0.1',
     port: 5173,
     // Permite importar los paquetes del workspace (fuera de admin/).
     fs: { allow: ['..'] },

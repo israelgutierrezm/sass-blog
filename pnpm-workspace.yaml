@@ -4,3 +4,4 @@ packages:
   - "packages/*"
   - "admin"
   - "renderer"
+  - "e2e"
