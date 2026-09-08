@@ -138,6 +138,22 @@ Pruebas transversales: aislamiento por-site (entries, pivote, referencias), anti
   sustituye sólo nodos EXACTAMENTE `{ "$bind": "ruta" }`; ruta fuera del allow-set → null
   (sin eval, sin reflexión, sin fuga de la ruta cruda). Verificado por mutación.
 
+### Notas de implementación (sub-slices 10–11 — CollectionGrid)
+
+- **Componente** `collection-grid` (site-schema, `category=dynamic`): props = sólo la
+  query (collection por handle, category por slug, order lista blanca, limit, columns,
+  showX). `FieldControl` gana `number` y `dynamic-select` (+ `optionsSource`).
+- **`SectionDataResolver`** (contrato de kernel) lo implementa Content
+  (`CollectionGridResolver`) y lo enlaza en `register()`. Devuelve
+  `{ items: EntryCard[], total }` de entries **publicadas**; batch anti-N+1
+  (`with([author, categories])`; ~5 consultas con N entries, verificado). `EntryCard`
+  calcula `path` y toma `excerpt`/`image` de claves por convención.
+- **Sidecar `resolved`** lo arma el helper de kernel `SectionResolution` (depende sólo
+  del contrato) tanto en el render **estático** (`RenderedPage`) como en el **dinámico**
+  (`CollectionRouteResolver`); vacío = `{}` (nunca `[]`). Builder no depende de Content.
+- **ETag compuesto**: versión + hash de `resolved` sólo cuando hay grids (sin grids, el
+  ETag queda estable por versión).
+
 ## Deuda MVP declarada
 
 Entries mutables sin versionado · richtext = texto plano (sin v-html/sanitizador) · media = URL

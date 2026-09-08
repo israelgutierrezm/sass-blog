@@ -10,6 +10,8 @@ use App\Modules\Content\Application\Rendering\EntryBindings;
 use App\Modules\Content\Infrastructure\Models\Collection;
 use App\Modules\Content\Infrastructure\Models\Entry;
 use App\Modules\Shared\Domain\Rendering\DynamicRouteResolver;
+use App\Modules\Shared\Domain\Rendering\SectionDataResolver;
+use App\Modules\Shared\Domain\Rendering\SectionResolution;
 use App\Modules\Sites\Infrastructure\Models\Site;
 
 /**
@@ -60,6 +62,14 @@ final class CollectionRouteResolver implements DynamicRouteResolver
         $sections = ($decoded instanceof \stdClass && isset($decoded->sections)) ? $decoded->sections : [];
         $resolvedSections = BindingResolver::resolve($sections, EntryBindings::map($entry));
 
+        // Sidecar `resolved`: una plantilla puede incluir un CollectionGrid (p.ej.
+        // "artículos relacionados"). Mismo contrato de kernel que el render estático.
+        $gridResolver = app()->bound(SectionDataResolver::class) ? app(SectionDataResolver::class) : null;
+        $resolved = SectionResolution::forSections($resolvedSections, $gridResolver, [
+            'workspace_id' => $entry->workspace_id,
+            'site_id' => $siteId,
+        ]);
+
         $site = Site::query()->whereKey($siteId)->first();
         $settings = is_array($site?->settings) ? $site->settings : [];
         $baseUrl = isset($settings['base_url']) && is_string($settings['base_url']) ? rtrim($settings['base_url'], '/') : '';
@@ -77,6 +87,7 @@ final class CollectionRouteResolver implements DynamicRouteResolver
                 'schema_version' => $version->schema_version,
                 'sections' => $resolvedSections,
             ],
+            'resolved' => $resolved,
             'entry' => [
                 'id' => $entry->ulid,
                 'title' => $entry->title,

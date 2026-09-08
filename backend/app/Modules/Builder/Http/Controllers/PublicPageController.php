@@ -45,9 +45,13 @@ final class PublicPageController extends Controller
             if ($page !== null && $page->published_version_id !== null) {
                 $version = $page->publishedVersion;
                 if ($version !== null) {
+                    $payload = RenderedPage::payload($page, $version, 'index,follow');
+
                     return response()
-                        ->json(['data' => RenderedPage::payload($page, $version, 'index,follow')])
-                        ->header('ETag', '"'.$version->ulid.'"')
+                        ->json(['data' => $payload])
+                        // ETag COMPUESTO: versión + hash del sidecar `resolved`, para
+                        // invalidar la caché cuando cambian las entries de un grid.
+                        ->header('ETag', self::composedEtag($version->ulid, $payload['resolved'] ?? null))
                         ->header('Cache-Control', 'public, max-age=60');
                 }
             }
@@ -57,9 +61,11 @@ final class PublicPageController extends Controller
             if (app()->bound(DynamicRouteResolver::class)) {
                 $payload = app(DynamicRouteResolver::class)->resolve($siteModel->id, $path);
                 if ($payload !== null) {
+                    $seed = (string) json_encode([$payload['page'] ?? [], $payload['resolved'] ?? null]);
+
                     return response()
                         ->json(['data' => $payload])
-                        ->header('ETag', '"'.md5((string) json_encode($payload['page'] ?? [])).'"')
+                        ->header('ETag', '"'.md5($seed).'"')
                         ->header('Cache-Control', 'public, max-age=60');
                 }
             }
@@ -98,5 +104,18 @@ final class PublicPageController extends Controller
         $path = '/'.ltrim(trim($path), '/');
 
         return $path === '/' ? '/' : rtrim($path, '/');
+    }
+
+    /**
+     * ETag = versión + hash de `resolved` (sólo si hay secciones dinámicas resueltas).
+     * Sin grids, `resolved` es {} y el ETag queda estable por versión.
+     */
+    private static function composedEtag(string $versionUlid, mixed $resolved): string
+    {
+        if (is_array($resolved) && $resolved !== []) {
+            return '"'.$versionUlid.'-'.substr(md5((string) json_encode($resolved)), 0, 12).'"';
+        }
+
+        return '"'.$versionUlid.'"';
     }
 }
