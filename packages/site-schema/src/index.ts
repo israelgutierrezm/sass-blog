@@ -10,6 +10,13 @@ export {
 } from './registry'
 export { hero } from './components/hero'
 export { text } from './components/text'
+export {
+  type FieldTypeControl,
+  type FieldTypeDef,
+  fieldTypes,
+  fieldTypesArtifact,
+  fieldTypeKeys,
+} from './field-types'
 export { buildManifest, type ComponentManifest, type RegistryManifest } from './manifest'
 export {
   pageSchemaForProfile,
