@@ -71,6 +71,18 @@ final class ModuleServiceProvider extends ServiceProvider
                 ->group($api);
         }
 
+        // Superficies públicas SIN autenticación (renderer). Archivo físico como
+        // frontera de confianza auditable (ADR-006): aquí NO va auth:sanctum ni el
+        // middleware 'workspace'; el contexto se deriva del sitio en el servidor.
+        $public = "{$path}/Http/Routes/public.php";
+
+        if (is_file($public)) {
+            Route::middleware('api')
+                ->prefix((string) config('sassblog.api.prefix'))
+                ->name((string) config('sassblog.api.name_prefix'))
+                ->group($public);
+        }
+
         $web = "{$path}/Http/Routes/web.php";
 
         if (is_file($web)) {

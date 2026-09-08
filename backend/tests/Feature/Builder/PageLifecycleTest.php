@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Models\User;
 use App\Modules\Audit\Infrastructure\Models\AuditLog;
 use App\Modules\Builder\Application\CreatePage;
 use App\Modules\Builder\Application\PublishPage;
@@ -10,38 +9,8 @@ use App\Modules\Builder\Application\SaveDraft;
 use App\Modules\Builder\Events\PagePublished;
 use App\Modules\Builder\Infrastructure\Models\Page;
 use App\Modules\Builder\Infrastructure\Models\PageVersion;
-use App\Modules\Sites\Infrastructure\Models\Site;
-use App\Modules\Tenancy\Infrastructure\Models\Workspace;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Str;
-
-/**
- * @return array{0: Workspace, 1: Site}
- */
-function builderSite(): array
-{
-    $ws = Workspace::factory()->create(['owner_id' => User::factory()->create()->id]);
-    $site = withinWorkspace($ws, fn () => Site::factory()->create());
-
-    return [$ws, $site];
-}
-
-/** @return array<string, mixed> */
-function heroSchema(string $heading = 'Hola Mundo'): array
-{
-    return [
-        'schema_version' => 1,
-        'sections' => [[
-            'id' => Str::upper((string) Str::ulid()),
-            'type' => 'hero',
-            'variant' => 'hero-centered',
-            'visible' => true,
-            'props' => ['heading' => $heading],
-            'settings' => [],
-        ]],
-    ];
-}
 
 it('crea una página con su draft v1 y fija el puntero', function () {
     [$ws, $site] = builderSite();

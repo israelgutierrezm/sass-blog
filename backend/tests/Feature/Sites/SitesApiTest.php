@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use App\Models\User;
-use App\Modules\Identity\Application\RegisterUser;
 use App\Modules\Tenancy\Infrastructure\Models\Workspace;
 use App\Modules\Tenancy\Infrastructure\Models\WorkspaceMember;
 use Database\Seeders\DatabaseSeeder;
@@ -13,18 +12,6 @@ use Spatie\Permission\PermissionRegistrar;
 beforeEach(function (): void {
     $this->seed(DatabaseSeeder::class);
 });
-
-/**
- * Registra un usuario (con su workspace personal, rol owner y suscripción free).
- *
- * @return array{user: User, workspace: Workspace}
- */
-function registered(string $email = 'user@example.com'): array
-{
-    $result = app(RegisterUser::class)->handle('Persona', $email, 'Password!123');
-
-    return ['user' => $result['user'], 'workspace' => $result['workspace']];
-}
 
 it('el dueño crea y lista sites en su workspace', function () {
     ['user' => $user, 'workspace' => $ws] = registered();

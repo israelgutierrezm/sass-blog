@@ -2,9 +2,17 @@
 
 declare(strict_types=1);
 
+use App\Models\User;
+use App\Modules\Builder\Application\CreatePage;
+use App\Modules\Builder\Infrastructure\Models\Page;
+use App\Modules\Identity\Application\RegisterUser;
 use App\Modules\Shared\Domain\Tenancy\WorkspaceContext;
+use App\Modules\Sites\Infrastructure\Models\Site;
 use App\Modules\Tenancy\Infrastructure\Models\Workspace;
+use App\Modules\Tenancy\Infrastructure\Models\WorkspaceMember;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
+use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
 /*
@@ -12,13 +20,9 @@ use Tests\TestCase;
 | Configuración base de Pest
 |--------------------------------------------------------------------------
 |
-| Suites:
-|   Unit          dominio puro (sin base de datos)
-|   Feature       casos de uso por endpoint e integración
-|   Architecture  reglas estructurales: scope de workspace, fronteras de módulos
-|
-| Las pruebas Feature/Architecture corren contra MySQL 8 real (base
-| `sass_blog_testing`), no SQLite (ver ADR-001 y phpunit.xml).
+| Suites: Unit (dominio puro) · Feature (endpoints e integración) ·
+| Architecture (reglas estructurales). Feature/Architecture corren contra
+| MySQL 8 real (base sass_blog_testing), no SQLite (ADR-001 / phpunit.xml).
 |
 */
 
@@ -29,30 +33,111 @@ pest()->use(RefreshDatabase::class)->in('Feature', 'Architecture');
 |--------------------------------------------------------------------------
 | Helpers de contexto de workspace
 |--------------------------------------------------------------------------
-|
-| El dominio exige un workspace resuelto. Fuera de HTTP (en pruebas) se fija con
-| estos helpers, que reflejan lo que hace el middleware de contexto en producción.
-|
 */
 
-/**
- * Fija el workspace activo para el resto de la prueba.
- */
 function actingForWorkspace(Workspace|int $workspace): int
 {
     $id = $workspace instanceof Workspace ? $workspace->id : $workspace;
-
     app(WorkspaceContext::class)->set($id);
 
     return $id;
 }
 
-/**
- * Ejecuta el callback dentro del contexto de un workspace y restaura el previo.
- */
 function withinWorkspace(Workspace|int $workspace, Closure $callback): mixed
 {
     $id = $workspace instanceof Workspace ? $workspace->id : $workspace;
 
     return app(WorkspaceContext::class)->runFor($id, $callback);
+}
+
+/*
+|--------------------------------------------------------------------------
+| Helpers de dominio compartidos (viven aquí para estar disponibles en
+| cualquier suite, incluso al correr un subconjunto de archivos)
+|--------------------------------------------------------------------------
+*/
+
+/**
+ * Registra un usuario con su workspace personal, rol owner y suscripción free.
+ *
+ * @return array{user: User, workspace: Workspace}
+ */
+function registered(string $email = 'user@example.com'): array
+{
+    return app(RegisterUser::class)->handle('Persona', $email, 'Password!123');
+}
+
+/**
+ * Crea un workspace con un site dentro (contexto ya restaurado a null al salir).
+ *
+ * @return array{0: Workspace, 1: Site}
+ */
+function builderSite(): array
+{
+    $ws = Workspace::factory()->create(['owner_id' => User::factory()->create()->id]);
+    $site = withinWorkspace($ws, fn () => Site::factory()->create());
+
+    return [$ws, $site];
+}
+
+/**
+ * Owner registrado + un site en su workspace.
+ *
+ * @return array{user: User, ws: Workspace, site: Site}
+ */
+function ownerWithSite(string $email = 'owner@example.com'): array
+{
+    ['user' => $user, 'workspace' => $ws] = registered($email);
+    $site = withinWorkspace($ws, fn () => Site::factory()->create());
+
+    return ['user' => $user, 'ws' => $ws, 'site' => $site];
+}
+
+function makePage(Workspace $ws, Site $site, string $title = 'Home', string $path = '/'): Page
+{
+    return withinWorkspace($ws, fn () => app(CreatePage::class)->handle($site, $title, $path));
+}
+
+function memberWithRole(Workspace $ws, string $role): User
+{
+    $user = User::factory()->create();
+    withinWorkspace($ws, function () use ($ws, $user, $role): void {
+        WorkspaceMember::create([
+            'workspace_id' => $ws->id,
+            'user_id' => $user->id,
+            'role' => $role,
+            'joined_at' => now(),
+        ]);
+        app(PermissionRegistrar::class)->setPermissionsTeamId($ws->id);
+        $user->assignRole($role);
+    });
+
+    return $user;
+}
+
+function pagesUrl(Workspace $ws, Site $site): string
+{
+    return "/api/v1/workspaces/{$ws->ulid}/sites/{$site->ulid}/pages";
+}
+
+/**
+ * Page schema válido con una sección hero. `settings` NO vacío a propósito: PHP no
+ * distingue {} de [], así que un settings vacío se serializaría como [] y opis lo
+ * rechazaría como "no es objeto".
+ *
+ * @return array<string, mixed>
+ */
+function heroSchema(string $heading = 'Hola Mundo'): array
+{
+    return [
+        'schema_version' => 1,
+        'sections' => [[
+            'id' => Str::upper((string) Str::ulid()),
+            'type' => 'hero',
+            'variant' => 'hero-centered',
+            'visible' => true,
+            'props' => ['heading' => $heading],
+            'settings' => ['spacing' => ['top' => 'md', 'bottom' => 'md']],
+        ]],
+    ];
 }

@@ -17,7 +17,10 @@ Endpoints públicos bajo `/api/v1/public/*`, sin `auth:sanctum` ni middleware `w
 servidor:
 
 1. Resuelve el sitio por su **ULID público**: `Site::withoutGlobalScopes()->where('ulid', …)
-   ->where('status','published')->first()` (404 si no existe o no está publicado).
+   ->first()` (404 si no existe o está archivado). **FASE 2**: el gate público es a nivel de
+   PÁGINA (se sirve sólo si `published_version_id` está presente); el gating por estado del
+   SITIO (`status='published'` para toda la superficie) se difiere a cuando exista el ciclo
+   de vida de publicación del sitio.
 2. **Deriva `workspace_id` del sitio** (dato autoritativo del servidor, jamás del cliente).
 3. Ejecuta la lectura dentro de `WorkspaceContext::runFor($site->workspace_id, fn () => …)`,
    con lo que el global scope queda satisfecho y `pages`/`page_versions` se scopean natural.
