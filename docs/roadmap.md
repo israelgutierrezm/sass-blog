@@ -21,12 +21,19 @@ capabilities, unicidad de slug, auth) verificadas por mutación.
 Site, y candado estructural de fronteras de módulos (ModuleBoundaries) — se suman al entrar
 en uso en Fase 2.
 
-## Fase 2 — Primer vertical slice del Builder  ⬅ diseño aprobado, en implementación
-Flujo real: User → Workspace → Site → Page → Add Hero → Edit Hero → Save Draft → Preview →
-Publish → View Public Site. Page/PageVersion, component registry mínimo (Hero + Text),
-`site-components` compartido preview/render, publish dinámico + preview SSR firmado.
-**Diseño completo y decisiones (D1–D13): [`fase2-builder-design.md`](fase2-builder-design.md)**
-y ADRs 004–008. Implementación en 13 sub-slices verificables.
+## Fase 2 — Primer vertical slice del Builder  ✅
+Flujo real **funcionando de punta a punta** (verificado por E2E Playwright y por mutación):
+User → Workspace → Site → Page → Add Hero → Edit → Save Draft → Publish → View Public Site.
+**Diseño y decisiones (D1–D13):** [`fase2-builder-design.md`](fase2-builder-design.md), ADRs 004–008.
+**Entregado (13 sub-slices):**
+- Paquetes `@sass-blog/*`: design-tokens, site-schema (registry único con zod + JSON Schema),
+  site-components (Hero/Text; test de render compartido Vite↔Nuxt), shared-types.
+- Backend módulo Builder: `pages`/`page_versions` (versión publicada inmutable, promover-y-bifurcar),
+  validación con opis, API admin (CRUD/publish/preview), superficie pública + preview firmado.
+- Admin (Vue): auth, capa HTTP central, Builder tri-panel derivado del manifest.
+- Renderer (Nuxt SSR): vista pública por `/_site/{ulid}` con los mismos site-components.
+- E2E Playwright del flujo completo (backend+admin+renderer reales).
+**Pruebas:** backend 58 (Pest) + JS 27 (Vitest) + 1 E2E. Deuda MVP declarada en el doc de diseño.
 
 ## Fase 3 — CMS vertical slice
 Collection, CollectionFields, Entry, Article preset, Category, Author básico.
