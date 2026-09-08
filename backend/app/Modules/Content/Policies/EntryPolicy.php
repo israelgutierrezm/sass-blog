@@ -33,4 +33,9 @@ final class EntryPolicy
     {
         return $user->hasPermissionTo('entry.update');
     }
+
+    public function publish(User $user, Entry $entry): bool
+    {
+        return $user->hasPermissionTo('entry.publish');
+    }
 }

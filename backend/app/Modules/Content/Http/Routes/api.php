@@ -28,6 +28,7 @@ Route::middleware(['auth:sanctum', 'workspace', 'capability:cms.collections'])
         Route::post('collections/{collection}/entries', [EntryController::class, 'store'])->name('entries.store');
         Route::get('collections/{collection}/entries/{entry}', [EntryController::class, 'show'])->name('entries.show');
         Route::patch('collections/{collection}/entries/{entry}', [EntryController::class, 'update'])->name('entries.update');
+        Route::post('collections/{collection}/entries/{entry}/publish', [EntryController::class, 'publish'])->name('entries.publish');
 
         // Autores (nivel site).
         Route::get('authors', [AuthorController::class, 'index'])->name('authors.index');

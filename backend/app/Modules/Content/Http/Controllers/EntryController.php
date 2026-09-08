@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Modules\Content\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Content\Application\PublishEntry;
 use App\Modules\Content\Application\SlugGenerator;
+use App\Modules\Content\Application\Validation\EntryDataValidator;
 use App\Modules\Content\Http\Requests\StoreEntryRequest;
 use App\Modules\Content\Http\Requests\UpdateEntryRequest;
 use App\Modules\Content\Http\Resources\EntryResource;
@@ -19,6 +21,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 /**
  * API admin de entries (borrador), anidada bajo su colección. El `data` se valida
@@ -107,6 +110,26 @@ final class EntryController extends Controller
         }
 
         return new EntryResource($entryModel->fresh()->load(['author', 'categories', 'collection']));
+    }
+
+    public function publish(Workspace $workspace, string $site, string $collection, string $entry): EntryResource
+    {
+        $siteModel = $this->resolveSite($site);
+        $collectionModel = $this->resolveCollection($siteModel, $collection);
+        $entryModel = $this->resolveEntry($collectionModel, $entry);
+        $this->authorize('publish', $entryModel);
+
+        // Revalidar con perfil PUBLISH: los campos required deben estar presentes.
+        $errors = app(EntryDataValidator::class)->validate($collectionModel->fields, $entryModel->data, 'publish');
+        if ($errors !== []) {
+            throw ValidationException::withMessages([
+                'values' => ['No se puede publicar: '.$errors[0]['message']],
+            ]);
+        }
+
+        $published = app(PublishEntry::class)->handle($entryModel, Auth::id());
+
+        return new EntryResource($published->load(['author', 'categories', 'collection']));
     }
 
     private function resolveSlug(StoreEntryRequest $request, Collection $collection): string

@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Modules\Content\Providers;
 
+use App\Modules\Content\Events\EntryPublished;
 use App\Modules\Content\Infrastructure\Models\Author;
 use App\Modules\Content\Infrastructure\Models\Category;
 use App\Modules\Content\Infrastructure\Models\Collection;
 use App\Modules\Content\Infrastructure\Models\Entry;
 use App\Modules\Content\Listeners\ProvisionArticleContent;
+use App\Modules\Content\Listeners\RecordEntryPublished;
 use App\Modules\Content\Policies\AuthorPolicy;
 use App\Modules\Content\Policies\CategoryPolicy;
 use App\Modules\Content\Policies\CollectionPolicy;
@@ -29,6 +31,7 @@ final class ContentServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Event::listen(SiteCreated::class, [ProvisionArticleContent::class, 'handle']);
+        Event::listen(EntryPublished::class, [RecordEntryPublished::class, 'handle']);
 
         Gate::policy(Author::class, AuthorPolicy::class);
         Gate::policy(Category::class, CategoryPolicy::class);
