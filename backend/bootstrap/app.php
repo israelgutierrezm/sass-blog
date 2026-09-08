@@ -1,5 +1,7 @@
 <?php
 
+use App\Modules\Shared\Domain\Capabilities\Exceptions\CapabilityDeniedException;
+use App\Modules\Shared\Http\Middleware\EnsureCapability;
 use App\Modules\Shared\Http\Middleware\ResolveWorkspace;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -14,13 +16,24 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Resuelve el workspace de la ruta, valida la membresía y fija el contexto.
         $middleware->alias([
+            // Resuelve el workspace de la ruta, valida la membresía y fija el contexto.
             'workspace' => ResolveWorkspace::class,
+            // Exige una capability del plan (corre DESPUÉS de 'workspace'). ADR-014.
+            'capability' => EnsureCapability::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        // El plan no incluye la funcionalidad -> 403 (no 500). ADR-014.
+        $exceptions->render(function (CapabilityDeniedException $e, Request $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return response()->json(['message' => $e->getMessage()], 403);
+            }
+
+            return null;
+        });
     })->create();
