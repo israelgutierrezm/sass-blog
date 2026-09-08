@@ -21,10 +21,12 @@ capabilities, unicidad de slug, auth) verificadas por mutación.
 Site, y candado estructural de fronteras de módulos (ModuleBoundaries) — se suman al entrar
 en uso en Fase 2.
 
-## Fase 2 — Primer vertical slice del Builder
+## Fase 2 — Primer vertical slice del Builder  ⬅ diseño aprobado, en implementación
 Flujo real: User → Workspace → Site → Page → Add Hero → Edit Hero → Save Draft → Preview →
-Publish → View Public Site. Page/PageVersion, component registry mínimo (Hero + básicos),
-`site-components` compartido preview/render, publish dinámico.
+Publish → View Public Site. Page/PageVersion, component registry mínimo (Hero + Text),
+`site-components` compartido preview/render, publish dinámico + preview SSR firmado.
+**Diseño completo y decisiones (D1–D13): [`fase2-builder-design.md`](fase2-builder-design.md)**
+y ADRs 004–008. Implementación en 13 sub-slices verificables.
 
 ## Fase 3 — CMS vertical slice
 Collection, CollectionFields, Entry, Article preset, Category, Author básico.
