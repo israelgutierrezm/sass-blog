@@ -33,6 +33,30 @@ export const router = createRouter({
       component: () => import('../views/BuilderView.vue'),
       props: true,
     },
+    {
+      path: '/w/:ws/s/:site/collections',
+      name: 'collections',
+      component: () => import('../views/CollectionsView.vue'),
+      props: true,
+    },
+    {
+      path: '/w/:ws/s/:site/c/:collection/entries',
+      name: 'entries',
+      component: () => import('../views/EntriesView.vue'),
+      props: true,
+    },
+    {
+      path: '/w/:ws/s/:site/c/:collection/entries/new',
+      name: 'entry-new',
+      component: () => import('../views/EntryEditorView.vue'),
+      props: true,
+    },
+    {
+      path: '/w/:ws/s/:site/c/:collection/entries/:entry',
+      name: 'entry-edit',
+      component: () => import('../views/EntryEditorView.vue'),
+      props: true,
+    },
   ],
 })
 

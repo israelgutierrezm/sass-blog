@@ -60,4 +60,83 @@ export interface AuthResponse {
   token: string
 }
 
+// --- CMS (FASE 3) -----------------------------------------------------------
+
+export interface CollectionFieldDto {
+  id: string
+  key: string
+  label: string
+  type: string
+  required: boolean
+  config: Record<string, unknown> | null
+  position: number
+  related_collection?: string | null
+}
+
+export interface CollectionDto {
+  id: string
+  handle: string
+  name: string
+  name_singular: string | null
+  description?: string | null
+  kind: string
+  route_prefix: string | null
+  fields?: CollectionFieldDto[]
+  created_at?: string
+  updated_at?: string
+}
+
+export interface AuthorDto {
+  id: string
+  name: string
+  slug: string
+  bio?: string | null
+  avatar_url?: string | null
+  email?: string | null
+  links?: Record<string, unknown> | null
+  position?: number
+}
+
+export interface CategoryDto {
+  id: string
+  name: string
+  slug: string
+  description?: string | null
+  position?: number
+}
+
+export interface EntryRefDto {
+  id: string
+  name: string
+  slug: string
+}
+
+export interface EntrySummaryDto {
+  id: string
+  title: string
+  slug: string
+  status: string
+  path: string | null
+  published_at: string | null
+  updated_at?: string
+}
+
+export interface EntryDto extends EntrySummaryDto {
+  values: Record<string, unknown>
+  author: EntryRefDto | null
+  categories: EntryRefDto[]
+}
+
+/** Tarjeta resuelta para el CollectionGrid (sidecar `resolved`). */
+export interface EntryCard {
+  id: string
+  title: string
+  path: string | null
+  excerpt: string | null
+  image: string | null
+  date: string | null
+  author: { name: string; slug: string } | null
+  category: { name: string; slug: string } | null
+}
+
 export type { PageSchema } from '@sass-blog/site-schema'
