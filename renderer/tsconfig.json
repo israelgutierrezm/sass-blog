@@ -1,0 +1,4 @@
+{
+  // Nuxt genera .nuxt/tsconfig.json en `nuxt prepare`.
+  "extends": "./.nuxt/tsconfig.json"
+}
