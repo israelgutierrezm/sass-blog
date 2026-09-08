@@ -45,6 +45,12 @@ final class Page extends Model
 
     public const STATUS_ARCHIVED = 'archived';
 
+    // Tipo de página (ADR-011): estándar (por path) vs plantilla de detalle de
+    // colección (path NULL, rellenada con datos de una Entry vía bindings).
+    public const KIND_STANDARD = 'standard';
+
+    public const KIND_COLLECTION_TEMPLATE = 'collection_template';
+
     protected $fillable = [
         'site_id',
         'title',
