@@ -19,9 +19,9 @@ final class RoleCatalog
      * @var array<string, list<string>>
      */
     public const ROLES = [
-        'owner' => ['workspace.view', 'workspace.update', 'member.manage', 'site.view', 'site.create', 'site.update', 'site.delete', 'page.view', 'page.create', 'page.update', 'page.publish'],
-        'admin' => ['workspace.view', 'member.manage', 'site.view', 'site.create', 'site.update', 'site.delete', 'page.view', 'page.create', 'page.update', 'page.publish'],
-        'editor' => ['workspace.view', 'site.view', 'site.create', 'site.update', 'page.view', 'page.create', 'page.update'],
+        'owner' => ['workspace.view', 'workspace.update', 'member.manage', 'site.view', 'site.create', 'site.update', 'site.delete', 'page.view', 'page.create', 'page.update', 'page.publish', 'category.manage', 'author.manage'],
+        'admin' => ['workspace.view', 'member.manage', 'site.view', 'site.create', 'site.update', 'site.delete', 'page.view', 'page.create', 'page.update', 'page.publish', 'category.manage', 'author.manage'],
+        'editor' => ['workspace.view', 'site.view', 'site.create', 'site.update', 'page.view', 'page.create', 'page.update', 'category.manage', 'author.manage'],
         'viewer' => ['workspace.view', 'site.view', 'page.view'],
     ];
 

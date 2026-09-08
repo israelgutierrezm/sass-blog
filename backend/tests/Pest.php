@@ -3,10 +3,13 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use App\Modules\Billing\Infrastructure\Models\Plan;
 use App\Modules\Builder\Application\CreatePage;
 use App\Modules\Builder\Infrastructure\Models\Page;
+use App\Modules\Content\Infrastructure\Models\Collection;
 use App\Modules\Identity\Application\RegisterUser;
 use App\Modules\Shared\Domain\Tenancy\WorkspaceContext;
+use App\Modules\Sites\Application\CreateSite;
 use App\Modules\Sites\Infrastructure\Models\Site;
 use App\Modules\Tenancy\Infrastructure\Models\Workspace;
 use App\Modules\Tenancy\Infrastructure\Models\WorkspaceMember;
@@ -96,6 +99,29 @@ function ownerWithSite(string $email = 'owner@example.com'): array
 function makePage(Workspace $ws, Site $site, string $title = 'Home', string $path = '/'): Page
 {
     return withinWorkspace($ws, fn () => app(CreatePage::class)->handle($site, $title, $path));
+}
+
+/**
+ * Owner con plan Pro (capability cms.* habilitada) + un site con el preset de
+ * artículos ya sembrado. Requiere haber corrido DatabaseSeeder (plan pro + caps).
+ *
+ * @return array{user: User, ws: Workspace, site: Site, articles: Collection}
+ */
+function cmsOwnerContext(string $email = 'owner@example.com'): array
+{
+    ['user' => $user, 'workspace' => $ws] = registered($email);
+
+    $pro = Plan::where('key', 'pro')->firstOrFail();
+    withinWorkspace($ws, fn () => $ws->subscription()->update(['plan_id' => $pro->id]));
+
+    $site = withinWorkspace($ws, fn () => app(CreateSite::class)->handle([
+        'name' => 'Blog', 'slug' => 'blog',
+    ]));
+
+    $articles = withinWorkspace($ws, fn () => Collection::query()
+        ->where('site_id', $site->id)->where('handle', 'articles')->firstOrFail());
+
+    return ['user' => $user, 'ws' => $ws, 'site' => $site, 'articles' => $articles];
 }
 
 function memberWithRole(Workspace $ws, string $role): User
