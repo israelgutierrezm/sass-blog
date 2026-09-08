@@ -1,17 +1,33 @@
 <script setup lang="ts">
 import type { Section } from '@sass-blog/site-schema'
 import { computed } from 'vue'
-import { componentFor } from './registry'
+import { componentFor, isDynamicType } from './registry'
+import type { ResolvedSections } from './types'
 import SectionShell from './SectionShell.vue'
 
-const props = defineProps<{ section: Section; editable?: boolean }>()
+const props = defineProps<{
+  section: Section
+  editable?: boolean
+  resolved?: ResolvedSections
+  linkBase?: string
+}>()
+
 const component = computed(() => componentFor(props.section.type))
+const dynamic = computed(() => isDynamicType(props.section.type))
+
+// Props extra SÓLO para componentes dinámicos: los estáticos (Hero/Text) no reciben
+// resolvedData/linkBase, así no se filtran atributos al DOM (ADR-008).
+const dynamicBindings = computed(() =>
+  dynamic.value
+    ? { resolvedData: props.resolved?.[props.section.id], linkBase: props.linkBase ?? '' }
+    : {},
+)
 </script>
 
 <template>
   <template v-if="section.visible">
     <SectionShell v-if="component" :settings="section.settings">
-      <component :is="component" :variant="section.variant" :props-data="section.props" />
+      <component :is="component" :variant="section.variant" :props-data="section.props" v-bind="dynamicBindings" />
     </SectionShell>
     <!-- Tipo desconocido: placeholder sólo en edición; en producción no renderiza NADA (nunca lanza). -->
     <div v-else-if="editable" class="st-unknown">Sección desconocida: {{ section.type }}</div>

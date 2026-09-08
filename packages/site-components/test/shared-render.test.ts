@@ -70,3 +70,55 @@ describe('render compartido (Vite jsdom ↔ SSR)', () => {
     expect(html).toContain('--st-color-primary: #ff0000;')
   })
 })
+
+const GRID_ID = '01ARZ3NDEKTSV4RRFFQ69G5FAV'
+
+const gridSchema: PageSchema = {
+  schema_version: 1,
+  sections: [
+    {
+      id: GRID_ID,
+      type: 'collection-grid',
+      variant: 'collection-grid-cards',
+      visible: true,
+      props: { collection: 'articles', columns: 3, showExcerpt: true },
+      settings: {},
+    },
+  ],
+}
+
+const resolved = {
+  [GRID_ID]: {
+    items: [
+      { id: 'E1', title: 'Uno', path: '/blog/uno', excerpt: 'Resumen uno' },
+      { id: 'E2', title: 'Dos', path: '/blog/dos', excerpt: 'Resumen dos' },
+    ],
+    total: 2,
+  },
+}
+
+describe('CollectionGrid (canal resolved)', () => {
+  it('renderiza tarjetas con href = linkBase + path (SSR)', async () => {
+    const html = await renderToString(
+      createSSRApp(PageRenderer, { schema: gridSchema, resolved, linkBase: '/_site/ABC' }),
+    )
+    expect(html).toContain('Uno')
+    expect(html).toContain('Resumen uno')
+    expect(html).toContain('href="/_site/ABC/blog/uno"')
+    expect(html).toContain('href="/_site/ABC/blog/dos"')
+  })
+
+  it('muestra placeholder cuando no hay datos resueltos', async () => {
+    const html = await renderToString(createSSRApp(PageRenderer, { schema: gridSchema }))
+    expect(html).toContain('Aún no hay contenido')
+    expect(html).not.toContain('href=')
+  })
+
+  it('NO filtra resolvedData/linkBase a los componentes estáticos (ADR-008)', async () => {
+    // Página de sólo hero/text con resolved + linkBase presentes.
+    const html = await renderToString(createSSRApp(PageRenderer, { schema, resolved: {}, linkBase: '/_site/ABC' }))
+    expect(html).toContain('Hola Mundo') // hero intacto
+    expect(html.toLowerCase()).not.toContain('linkbase')
+    expect(html.toLowerCase()).not.toContain('resolveddata')
+  })
+})
