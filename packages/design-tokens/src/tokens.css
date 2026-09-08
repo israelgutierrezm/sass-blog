@@ -1,0 +1,24 @@
+.st-site-root {
+  --st-color-primary: #2563eb;
+  --st-color-secondary: #4b5563;
+  --st-color-accent: #f59e0b;
+  --st-color-surface: #ffffff;
+  --st-color-surface-muted: #f3f4f6;
+  --st-color-text: #111827;
+  --st-color-text-muted: #6b7280;
+  --st-color-on-primary: #ffffff;
+  --st-color-dark: #0b1220;
+  --st-color-on-dark: #f9fafb;
+  --st-typography-heading: 'Inter', system-ui, sans-serif;
+  --st-typography-body: 'Inter', system-ui, sans-serif;
+  --st-radius-sm: 4px;
+  --st-radius-md: 8px;
+  --st-radius-lg: 16px;
+  --st-spacing-none: 0;
+  --st-spacing-sm: 0.5rem;
+  --st-spacing-md: 1rem;
+  --st-spacing-lg: 2rem;
+  --st-spacing-xl: 4rem;
+  --st-container-default: 72rem;
+  --st-container-wide: 90rem;
+}

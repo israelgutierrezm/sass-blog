@@ -12,6 +12,8 @@
     "dev:renderer": "pnpm --filter renderer dev",
     "build:admin": "pnpm --filter admin build",
     "build:renderer": "pnpm --filter renderer build",
-    "test": "pnpm -r test"
+    "build:schema": "pnpm --filter @sass-blog/site-schema build",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck"
   }
 }

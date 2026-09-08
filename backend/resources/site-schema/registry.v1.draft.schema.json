@@ -1,0 +1,238 @@
+{
+  "$ref": "#/definitions/PageSchemaDraft",
+  "definitions": {
+    "PageSchemaDraft": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "exclusiveMinimum": 0
+        },
+        "sections": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "hero"
+                  },
+                  "variant": {
+                    "type": "string",
+                    "enum": [
+                      "hero-centered",
+                      "hero-split",
+                      "hero-minimal"
+                    ]
+                  },
+                  "visible": {
+                    "type": "boolean"
+                  },
+                  "props": {
+                    "type": "object",
+                    "properties": {
+                      "eyebrow": {
+                        "type": "string"
+                      },
+                      "heading": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "subheading": {
+                        "type": "string"
+                      },
+                      "align": {
+                        "type": "string",
+                        "enum": [
+                          "left",
+                          "center"
+                        ],
+                        "default": "center"
+                      },
+                      "primaryCta": {
+                        "type": "object",
+                        "properties": {
+                          "label": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "href": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        },
+                        "required": [
+                          "label",
+                          "href"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "secondaryCta": {
+                        "$ref": "#/definitions/PageSchemaDraft/properties/sections/items/anyOf/0/properties/props/properties/primaryCta"
+                      },
+                      "image": {
+                        "type": "object",
+                        "properties": {
+                          "src": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "alt": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "src",
+                          "alt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "heading"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "settings": {
+                    "type": "object",
+                    "properties": {
+                      "spacing": {
+                        "type": "object",
+                        "properties": {
+                          "top": {
+                            "type": "string",
+                            "enum": [
+                              "none",
+                              "sm",
+                              "md",
+                              "lg",
+                              "xl"
+                            ]
+                          },
+                          "bottom": {
+                            "$ref": "#/definitions/PageSchemaDraft/properties/sections/items/anyOf/0/properties/settings/properties/spacing/properties/top"
+                          }
+                        },
+                        "required": [
+                          "top",
+                          "bottom"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "background": {
+                        "type": "string",
+                        "enum": [
+                          "transparent",
+                          "surface",
+                          "surface-muted",
+                          "primary",
+                          "dark"
+                        ]
+                      },
+                      "container": {
+                        "type": "string",
+                        "enum": [
+                          "default",
+                          "wide",
+                          "full"
+                        ]
+                      },
+                      "theme": {
+                        "type": "string",
+                        "enum": [
+                          "inherit",
+                          "light",
+                          "dark"
+                        ]
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "id",
+                  "type",
+                  "variant",
+                  "visible",
+                  "props",
+                  "settings"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "text"
+                  },
+                  "variant": {
+                    "type": "string",
+                    "enum": [
+                      "text-prose"
+                    ]
+                  },
+                  "visible": {
+                    "type": "boolean"
+                  },
+                  "props": {
+                    "type": "object",
+                    "properties": {
+                      "heading": {
+                        "type": "string"
+                      },
+                      "paragraphs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "default": []
+                      },
+                      "align": {
+                        "type": "string",
+                        "enum": [
+                          "left",
+                          "center"
+                        ],
+                        "default": "left"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "settings": {
+                    "$ref": "#/definitions/PageSchemaDraft/properties/sections/items/anyOf/0/properties/settings"
+                  }
+                },
+                "required": [
+                  "id",
+                  "type",
+                  "variant",
+                  "visible",
+                  "props",
+                  "settings"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          }
+        }
+      },
+      "required": [
+        "schema_version",
+        "sections"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

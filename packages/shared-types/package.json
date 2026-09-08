@@ -1,0 +1,20 @@
+{
+  "name": "@sass-blog/shared-types",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "echo \"(sin pruebas: sólo tipos)\""
+  },
+  "dependencies": {
+    "@sass-blog/site-schema": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}

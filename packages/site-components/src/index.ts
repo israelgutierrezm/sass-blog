@@ -1,0 +1,6 @@
+export { default as PageRenderer } from './PageRenderer.vue'
+export { default as SectionRenderer } from './SectionRenderer.vue'
+export { default as SectionShell } from './SectionShell.vue'
+export { default as HeroSection } from './components/Hero.vue'
+export { default as TextSection } from './components/Text.vue'
+export { componentFor } from './registry'
