@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Sites\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Sites\Application\CreateSite;
 use App\Modules\Sites\Http\Requests\StoreSiteRequest;
 use App\Modules\Sites\Http\Resources\SiteResource;
 use App\Modules\Sites\Infrastructure\Models\Site;
@@ -26,12 +27,13 @@ final class SiteController extends Controller
         return SiteResource::collection(Site::query()->latest()->get());
     }
 
-    public function store(Workspace $workspace, StoreSiteRequest $request): JsonResponse
+    public function store(Workspace $workspace, StoreSiteRequest $request, CreateSite $createSite): JsonResponse
     {
         $this->authorize('create', Site::class);
 
-        // workspace_id lo rellena BelongsToWorkspace desde el contexto: nunca del cliente.
-        $site = Site::create($request->safe()->only(['name', 'slug', 'status']));
+        // workspace_id lo rellena BelongsToWorkspace desde el contexto: nunca del
+        // cliente. CreateSite emite SiteCreated (Content siembra el preset de artículos).
+        $site = $createSite->handle($request->safe()->only(['name', 'slug', 'status']));
 
         return (new SiteResource($site))
             ->response()
