@@ -1,12 +1,25 @@
 import type { z } from 'zod'
 
-export type FieldControl = 'text' | 'textarea' | 'select' | 'boolean' | 'url' | 'string-list'
+export type FieldControl =
+  | 'text'
+  | 'textarea'
+  | 'select'
+  | 'boolean'
+  | 'url'
+  | 'string-list'
+  | 'number'
+  | 'dynamic-select'
+
+/** Fuente de opciones que el admin resuelve por API para un control dynamic-select. */
+export type OptionsSource = 'collections' | 'categories'
 
 /** Descriptor de UI de un prop (el admin deriva sus controles de aquí). */
 export interface FieldDescriptor {
   label: string
   control: FieldControl
   options?: { value: string; label: string }[]
+  /** Para control 'dynamic-select': el admin puebla las opciones desde esta fuente. */
+  optionsSource?: OptionsSource
 }
 
 export interface VariantDefinition {

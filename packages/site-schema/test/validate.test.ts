@@ -63,9 +63,44 @@ describe('validatePageSchema', () => {
   })
 })
 
+function gridSection(props: Record<string, unknown> = {}, id = ULID) {
+  return {
+    id,
+    type: 'collection-grid',
+    variant: 'collection-grid-cards',
+    visible: true,
+    props: { collection: 'articles', ...props },
+    settings: {},
+  }
+}
+
+describe('CollectionGrid', () => {
+  it('acepta una sección con la query mínima (collection)', () => {
+    expect(validatePageSchema({ schema_version: 1, sections: [gridSection()] }, 'publish').valid).toBe(true)
+  })
+
+  it('exige collection', () => {
+    const bad = { schema_version: 1, sections: [{ ...gridSection(), props: {} }] }
+    expect(validatePageSchema(bad).valid).toBe(false)
+  })
+
+  it('rechaza un order fuera de la lista blanca', () => {
+    expect(validatePageSchema({ schema_version: 1, sections: [gridSection({ order: 'random' })] }).valid).toBe(false)
+  })
+
+  it('rechaza limit fuera de rango y columns > 4', () => {
+    expect(validatePageSchema({ schema_version: 1, sections: [gridSection({ limit: 0 })] }).valid).toBe(false)
+    expect(validatePageSchema({ schema_version: 1, sections: [gridSection({ columns: 5 })] }).valid).toBe(false)
+  })
+
+  it('rechaza props extra (strict)', () => {
+    expect(validatePageSchema({ schema_version: 1, sections: [gridSection({ nope: 1 })] }).valid).toBe(false)
+  })
+})
+
 describe('registry & manifest', () => {
-  it('expone los tipos hero y text', () => {
-    expect(componentTypes()).toEqual(expect.arrayContaining(['hero', 'text']))
+  it('expone los tipos hero, text y collection-grid', () => {
+    expect(componentTypes()).toEqual(expect.arrayContaining(['hero', 'text', 'collection-grid']))
   })
 
   it('el manifest lista componentes con variantes y defaults', () => {

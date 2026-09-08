@@ -222,6 +222,113 @@
                   "settings"
                 ],
                 "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "collection-grid"
+                  },
+                  "variant": {
+                    "type": "string",
+                    "enum": [
+                      "collection-grid-cards",
+                      "collection-grid-list"
+                    ]
+                  },
+                  "visible": {
+                    "type": "boolean"
+                  },
+                  "props": {
+                    "type": "object",
+                    "properties": {
+                      "collection": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "mode": {
+                        "type": "string",
+                        "enum": [
+                          "automatic",
+                          "manual"
+                        ],
+                        "default": "automatic"
+                      },
+                      "category": {
+                        "type": "string"
+                      },
+                      "limit": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 48,
+                        "default": 6
+                      },
+                      "order": {
+                        "type": "string",
+                        "enum": [
+                          "recent",
+                          "oldest",
+                          "title"
+                        ],
+                        "default": "recent"
+                      },
+                      "columns": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 4,
+                        "default": 3
+                      },
+                      "showExcerpt": {
+                        "type": "boolean",
+                        "default": true
+                      },
+                      "showImage": {
+                        "type": "boolean",
+                        "default": true
+                      },
+                      "showDate": {
+                        "type": "boolean",
+                        "default": true
+                      },
+                      "showAuthor": {
+                        "type": "boolean",
+                        "default": false
+                      },
+                      "showCategory": {
+                        "type": "boolean",
+                        "default": false
+                      },
+                      "manualEntries": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "default": []
+                      }
+                    },
+                    "required": [
+                      "collection"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "settings": {
+                    "$ref": "#/definitions/PageSchemaDraft/properties/sections/items/anyOf/0/properties/settings"
+                  }
+                },
+                "required": [
+                  "id",
+                  "type",
+                  "variant",
+                  "visible",
+                  "props",
+                  "settings"
+                ],
+                "additionalProperties": false
               }
             ]
           }

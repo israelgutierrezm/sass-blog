@@ -1,3 +1,4 @@
+import { collectionGrid } from './components/collection-grid'
 import { hero } from './components/hero'
 import { text } from './components/text'
 import type { ComponentDefinition } from './define-component'
@@ -8,6 +9,7 @@ export const REGISTRY_VERSION = 1
 export const registry: Record<string, ComponentDefinition> = {
   [hero.type]: hero,
   [text.type]: text,
+  [collectionGrid.type]: collectionGrid,
 }
 
 export function componentTypes(): string[] {

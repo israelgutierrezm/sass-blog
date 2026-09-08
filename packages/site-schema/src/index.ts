@@ -10,6 +10,7 @@ export {
 } from './registry'
 export { hero } from './components/hero'
 export { text } from './components/text'
+export { collectionGrid } from './components/collection-grid'
 export {
   type FieldTypeControl,
   type FieldTypeDef,
