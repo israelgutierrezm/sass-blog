@@ -42,3 +42,31 @@ render compartido). `url`/`media` se validan a esquema `http(s)` (bloquear `java
 - (−) El frontend sólo previsualiza forma/tipo/enum/required; la integridad referencial es
   "pendiente de validar en el servidor".
 - (−) Publicar puede fallar por un `required` nuevo del schema (correcto, con mensaje claro).
+
+## Notas de implementación (sub-slice 4)
+
+Decisiones tomadas al implementar `EntryDataValidator` (validadas por revisión adversarial):
+
+- **Validador agnóstico a la key.** Cada campo se mapea a un atributo sintético (`f0..fN`) y su
+  valor se toma con acceso **literal** a la clave (`array_key_exists`), no interpolando la key en
+  una ruta con notación de puntos de Laravel. De lo contrario una key con `.` o `*` (p. ej.
+  `seo.canonical`) se reinterpretaría como ruta anidada y **evadiría por completo las reglas**
+  (SafeUrl incluido) — un bypass de seguridad real. Las rutas de error se traducen de vuelta a la
+  key real.
+- **Detección de claves fantasma por string.** PHP normaliza las keys numéricas del JSON a `int`;
+  la comparación con lo declarado castea ambos lados a string para no rechazar keys numéricas
+  legítimas.
+- **`date`/`datetime` con `date_format`** (no la regla `date` genérica): `Y-m-d` para `date` e
+  ISO-8601 para `datetime`. Distingue los dos tipos y fija formato canónico (contrato UTC).
+- **`money` con `decimal:0,2`**: rechaza notación científica y escala > 2 (evita truncamiento
+  silencioso frente a `DECIMAL(12,2)`).
+- **Cadena vacía `""`**: NO se normaliza en el validador. Laravel ya salta las reglas
+  no-implícitas cuando `trim($value) === ''` (gate `presentOrRuleIsImplicit`), de modo que `""`
+  se comporta como ausente de forma uniforme en todos los escalares.
+
+**Deuda declarada:** (a) el **formato de la `key`** de un `CollectionField` (rechazar `.`, `*`,
+etc.) se validará en la **creación del campo** (Form Request, sub-slice 7); el validador ya es
+seguro ante keys arbitrarias, pero conviene la defensa en profundidad. (b) `FieldType::Slug` en
+`data` se valida sólo como `string` (es campo de despliegue/binding; la ruta pública sale de la
+columna dedicada `entries.slug`, no de `data`). (c) `integer` acepta el booleano `true` (quirk de
+la regla nativa de Laravel); impacto nulo con clientes JSON de formulario.
