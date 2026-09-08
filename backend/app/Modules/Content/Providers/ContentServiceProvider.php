@@ -9,12 +9,14 @@ use App\Modules\Content\Infrastructure\Models\Author;
 use App\Modules\Content\Infrastructure\Models\Category;
 use App\Modules\Content\Infrastructure\Models\Collection;
 use App\Modules\Content\Infrastructure\Models\Entry;
+use App\Modules\Content\Infrastructure\Rendering\CollectionRouteResolver;
 use App\Modules\Content\Listeners\ProvisionArticleContent;
 use App\Modules\Content\Listeners\RecordEntryPublished;
 use App\Modules\Content\Policies\AuthorPolicy;
 use App\Modules\Content\Policies\CategoryPolicy;
 use App\Modules\Content\Policies\CollectionPolicy;
 use App\Modules\Content\Policies\EntryPolicy;
+use App\Modules\Shared\Domain\Rendering\DynamicRouteResolver;
 use App\Modules\Sites\Events\SiteCreated;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
@@ -28,6 +30,13 @@ use Illuminate\Support\ServiceProvider;
  */
 final class ContentServiceProvider extends ServiceProvider
 {
+    public function register(): void
+    {
+        // Enlaza el contrato de kernel: Builder resuelve rutas dinámicas por esta
+        // abstracción, sin depender de Content (degradación elegante si no se enlaza).
+        $this->app->bind(DynamicRouteResolver::class, CollectionRouteResolver::class);
+    }
+
     public function boot(): void
     {
         Event::listen(SiteCreated::class, [ProvisionArticleContent::class, 'handle']);

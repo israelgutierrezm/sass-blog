@@ -7,6 +7,7 @@ namespace App\Modules\Builder\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Builder\Application\RenderedPage;
 use App\Modules\Builder\Infrastructure\Models\Page;
+use App\Modules\Shared\Domain\Rendering\DynamicRouteResolver;
 use App\Modules\Shared\Domain\Tenancy\WorkspaceContext;
 use App\Modules\Sites\Infrastructure\Models\Site;
 use Illuminate\Http\JsonResponse;
@@ -35,20 +36,35 @@ final class PublicPageController extends Controller
         $path = $this->normalizePath((string) $request->query('path', '/'));
 
         return app(WorkspaceContext::class)->runFor($siteModel->workspace_id, function () use ($siteModel, $path): JsonResponse {
+            // 1. Estático primero: una Page con ese path exacto, publicada.
             $page = Page::query()
                 ->where('site_id', $siteModel->id)
                 ->where('path', $path)
                 ->first();
 
-            abort_if($page === null || $page->published_version_id === null, 404, 'Página no publicada.');
+            if ($page !== null && $page->published_version_id !== null) {
+                $version = $page->publishedVersion;
+                if ($version !== null) {
+                    return response()
+                        ->json(['data' => RenderedPage::payload($page, $version, 'index,follow')])
+                        ->header('ETag', '"'.$version->ulid.'"')
+                        ->header('Cache-Control', 'public, max-age=60');
+                }
+            }
 
-            $version = $page->publishedVersion;
-            abort_if($version === null, 404);
+            // 2. Dinámico: detalle de colección, SÓLO si Content enlazó el resolver de
+            // kernel (si no, el render queda sólo-estático; Builder no depende de Content).
+            if (app()->bound(DynamicRouteResolver::class)) {
+                $payload = app(DynamicRouteResolver::class)->resolve($siteModel->id, $path);
+                if ($payload !== null) {
+                    return response()
+                        ->json(['data' => $payload])
+                        ->header('ETag', '"'.md5((string) json_encode($payload['page'] ?? [])).'"')
+                        ->header('Cache-Control', 'public, max-age=60');
+                }
+            }
 
-            return response()
-                ->json(['data' => RenderedPage::payload($page, $version, 'index,follow')])
-                ->header('ETag', '"'.$version->ulid.'"')
-                ->header('Cache-Control', 'public, max-age=60');
+            abort(404, 'Página no publicada.');
         });
     }
 

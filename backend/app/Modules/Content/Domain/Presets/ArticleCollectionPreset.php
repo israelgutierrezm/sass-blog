@@ -6,6 +6,7 @@ namespace App\Modules\Content\Domain\Presets;
 
 use App\Modules\Content\Domain\CollectionKind;
 use App\Modules\Content\Domain\Fields\FieldType;
+use Illuminate\Support\Str;
 
 /**
  * Definición cerrada del preset de artículos (blog), sembrado al crear un site
@@ -39,6 +40,46 @@ final class ArticleCollectionPreset
                 ['key' => 'tags', 'label' => 'Etiquetas', 'type' => FieldType::Json, 'required' => false],
                 ['key' => 'reading_time', 'label' => 'Tiempo de lectura (min)', 'type' => FieldType::Integer, 'required' => false],
                 ['key' => 'featured', 'label' => 'Destacado', 'type' => FieldType::Boolean, 'required' => false],
+            ],
+        ];
+    }
+
+    /**
+     * Schema de la Page plantilla (kind=collection_template) con placeholders de
+     * binding ({ "$bind": … }) resueltos en render contra cada entry (ADR-011/012).
+     * Usa componentes reales del registro (hero, text); no pasa por la validación
+     * estricta del page schema porque los bindings ocupan el lugar de strings.
+     *
+     * @return array<string, mixed>
+     */
+    public static function templateSchema(): array
+    {
+        return [
+            'schema_version' => 1,
+            'sections' => [
+                [
+                    'id' => Str::upper((string) Str::ulid()),
+                    'type' => 'hero',
+                    'variant' => 'hero-centered',
+                    'visible' => true,
+                    'props' => [
+                        'heading' => ['$bind' => 'entry.title'],
+                        'subheading' => ['$bind' => 'entry.data.excerpt'],
+                        'align' => 'center',
+                    ],
+                    'settings' => ['spacing' => ['top' => 'xl', 'bottom' => 'xl']],
+                ],
+                [
+                    'id' => Str::upper((string) Str::ulid()),
+                    'type' => 'text',
+                    'variant' => 'text-prose',
+                    'visible' => true,
+                    'props' => [
+                        'paragraphs' => [['$bind' => 'entry.data.body']],
+                        'align' => 'left',
+                    ],
+                    'settings' => ['spacing' => ['top' => 'md', 'bottom' => 'md']],
+                ],
             ],
         ];
     }

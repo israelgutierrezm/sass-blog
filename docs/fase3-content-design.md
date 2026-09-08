@@ -118,6 +118,26 @@ Pruebas transversales: aislamiento por-site (entries, pivote, referencias), anti
   con objeto vacío se guarda como `[]`); igual que la limitación conocida de PHP. Se
   revisará si algún campo `json` necesita preservar objeto vacío.
 
+### Notas de implementación (sub-slice 9 — artículo dinámico)
+
+- **Plantilla-como-Page**: la crea el servicio de Builder `CreateCollectionTemplate`
+  (Content depende de Builder y lo invoca; no toca sus tablas). Page
+  `kind=collection_template`, `path=NULL` (invariante del CHECK), publicada. Su schema
+  lleva placeholders `{ "$bind": … }`, por eso NO pasa por la validación estricta del
+  page schema (es plantilla del sistema, sembrada). El preset la enlaza en
+  `collections.template_page_id`.
+- **`DynamicRouteResolver`** (contrato de kernel) lo enlaza Content
+  (`CollectionRouteResolver`) en `register()`. El render público es **estático-primero**
+  (Page por path exacto) y, si no hay, **dinámico** (`/{route_prefix}/{slug}` → colección
+  con plantilla + entry **publicada**). Builder consulta el contrato sólo si está
+  enlazado (degradación elegante; no depende de Content). Payload con la MISMA forma que
+  el estático + bloque `entry`.
+- **Bindings (ADR-012)**: `EntryBindings::map` produce un allow-set CERRADO
+  colección-consciente (columnas universales seguras + autor + campos `data`
+  **bindeables**: escalares; nunca media/relación/multiselect/json). `BindingResolver`
+  sustituye sólo nodos EXACTAMENTE `{ "$bind": "ruta" }`; ruta fuera del allow-set → null
+  (sin eval, sin reflexión, sin fuga de la ruta cruda). Verificado por mutación.
+
 ## Deuda MVP declarada
 
 Entries mutables sin versionado · richtext = texto plano (sin v-html/sanitizador) · media = URL
