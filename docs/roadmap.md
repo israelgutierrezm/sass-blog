@@ -35,9 +35,12 @@ User → Workspace → Site → Page → Add Hero → Edit → Save Draft → Pu
 - E2E Playwright del flujo completo (backend+admin+renderer reales).
 **Pruebas:** backend 58 (Pest) + JS 27 (Vitest) + 1 E2E. Deuda MVP declarada en el doc de diseño.
 
-## Fase 3 — CMS vertical slice
+## Fase 3 — CMS vertical slice  ⬅ diseño aprobado, en implementación
 Collection, CollectionFields, Entry, Article preset, Category, Author básico.
 Flujo: Create Article → Publish → CollectionGrid → Homepage → Article Page.
+**Diseño y decisiones (D1–D12):** [`fase3-content-design.md`](fase3-content-design.md), ADRs 009–015.
+Módulo `Content` (motor híbrido, validación dinámica, CollectionGrid embebido, template-como-Page
+con bindings seguros). Implementación en 15 sub-slices verificables.
 
 ## Fase 4 — Media + Menus + SEO
 Media library (metadata + transformaciones por job), Menus jerárquicos, SEO de primera clase
