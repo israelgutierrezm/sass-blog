@@ -27,6 +27,7 @@ class PlanSeeder extends Seeder
         // Pro: creación de sitios avanzada.
         $this->grant($pro, [
             Capability::CmsCollections,
+            Capability::MediaLibrary,
             Capability::SiteCustomDomain,
             Capability::SiteMultilanguage,
             Capability::BuilderCustomCode,

@@ -21,6 +21,7 @@ enum Capability: string
     case SiteMultilanguage = 'site.multilanguage';
     case CmsCollections = 'cms.collections';
     case CmsAdvancedWorkflow = 'cms.advanced_workflow';
+    case MediaLibrary = 'media.library';
     case BuilderCustomCode = 'builder.custom_code';
     case PublisherEditorial = 'publisher.editorial';
     case PublisherFrontpages = 'publisher.frontpages';
@@ -40,6 +41,7 @@ enum Capability: string
             self::SiteMultilanguage => 'Multilenguaje',
             self::CmsCollections => 'Colecciones dinámicas',
             self::CmsAdvancedWorkflow => 'Flujo editorial avanzado',
+            self::MediaLibrary => 'Librería de medios',
             self::BuilderCustomCode => 'Código personalizado',
             self::PublisherEditorial => 'Suite editorial',
             self::PublisherFrontpages => 'Editor de portadas',
