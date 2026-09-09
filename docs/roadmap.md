@@ -49,6 +49,11 @@ CollectionGrid en el Builder (dynamic-select por API + control numérico).
 Media library (metadata + transformaciones por job), Menus jerárquicos, SEO de primera clase
 (sitemap, robots, redirects, slug history).
 
+**Diseño aprobado** (`docs/fase4-design.md`, ADRs 016–018). Tres sub-fases en orden
+**Media → SEO → Menús**. Decisiones: media por-sitio; campo `media` = URL + selector; menús como
+sección `navigation` (sidecar `resolved`). SEO servido dinámicamente (los archivos estáticos
+sitemap/robots quedan en Fase 5). En curso: **4A Media**.
+
 ## Fase 5 — Static Publishing
 Site → Publish Static → Generate → Export Artifact, reutilizando page schemas y
 `site-components`.
