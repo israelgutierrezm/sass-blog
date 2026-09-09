@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Identity\Providers;
 
+use App\Modules\Identity\Console\ReprovisionRbacCommand;
 use App\Modules\Identity\Listeners\ProvisionWorkspaceRbac;
 use App\Modules\Shared\Domain\Tenancy\WorkspaceContext;
 use App\Modules\Tenancy\Events\WorkspaceCreated;
@@ -36,5 +37,9 @@ final class IdentityServiceProvider extends ServiceProvider
 
         // Efecto cruzado por evento: al crear un workspace, provisiona su RBAC.
         Event::listen(WorkspaceCreated::class, [ProvisionWorkspaceRbac::class, 'handle']);
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([ReprovisionRbacCommand::class]);
+        }
     }
 }

@@ -1,6 +1,6 @@
 # FASE 3 — Diseño del vertical CMS (Collection Engine + Articles)
 
-- Estado: **Aprobado** (decisiones D1–D12; D1 fila mutable, D8 texto plano, D12 preview diferido).
+- Estado: **Implementado** (diseño aprobado, decisiones D1–D12; D1 fila mutable, D8 texto plano, D12 preview diferido).
 - Fecha: 2026-09-08
 - ADRs: 009 (motor híbrido), 010 (validación dinámica), 011 (ruteo/plantillas), 012 (bindings),
   013 (datos de secciones dinámicas), 014 (gating por capability), 015 (diferir SiteScope).
@@ -153,6 +153,27 @@ Pruebas transversales: aislamiento por-site (entries, pivote, referencias), anti
   (`CollectionRouteResolver`); vacío = `{}` (nunca `[]`). Builder no depende de Content.
 - **ETag compuesto**: versión + hash de `resolved` sólo cuando hay grids (sin grids, el
   ETag queda estable por versión).
+
+### Notas de implementación (sub-slices 12–15 — UI, E2E, cierre)
+
+- **site-components**: `CollectionGrid.vue` determinista (cards `<a :href="linkBase+path">`,
+  placeholder sin datos). `PageRenderer`/`SectionRenderer` pasan `resolved`/`linkBase` sólo a
+  componentes dinámicos (Hero/Text intactos, sin fuga de atributos, ADR-008).
+- **admin**: vistas Collections/Entries/EntryEditor; `EntryFieldControl` deriva el control del
+  tipo del campo (richtext=textarea, media=URL, relation=ULID MVP, json crudo). El editor guarda
+  borrador y publica. **Diferido (13b):** pantallas CRUD de taxonomía (categorías/autores) y el
+  panel del CollectionGrid en el Builder (dynamic-select).
+- **renderer**: `[...slug].vue` reenvía `resolved` + `linkBase=/{reservedPrefix}/{siteId}` al
+  `PageRenderer`. Verificado en navegador (SSR) el home-con-grid y el artículo con bindings.
+- **Reprovisión de RBAC**: el comando quedó como **`identity:reprovision-rbac`** (no
+  `content:…`): reprovisionar RBAC escribe tablas de Spatie que pertenecen a Identity; un comando
+  de Content escribiéndolas violaría las fronteras de módulo. La lógica por-workspace se extrajo a
+  `Identity\Application\RbacProvisioner`, reutilizada por el listener de alta y por el comando.
+- **E2E Playwright** (`content-vertical.spec.ts`): login Pro → site → colección → entrada →
+  publicar → ver el artículo público (SSR con bindings). El usuario Pro lo siembra
+  `E2eContentSeeder` (el CMS exige la capability cms.collections).
+
+**Estado: FASE 3 completada** (salvo la deuda 13b declarada).
 
 ## Deuda MVP declarada
 

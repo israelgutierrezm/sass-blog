@@ -22,8 +22,10 @@ export default defineConfig({
 
   webServer: [
     {
-      // Backend con BD de E2E: migra+siembra y sirve. DB_DATABASE en env pisa .env.
-      command: 'php artisan migrate:fresh --seed --force && php artisan serve --host=127.0.0.1 --port=8000',
+      // Backend con BD de E2E: migra+siembra (+ usuario Pro para el CMS) y sirve.
+      // DB_DATABASE en env pisa .env.
+      command:
+        'php artisan migrate:fresh --seed --force && php artisan db:seed --class="Database\\Seeders\\E2eContentSeeder" --force && php artisan serve --host=127.0.0.1 --port=8000',
       cwd: '../backend',
       url: 'http://127.0.0.1:8000/up',
       timeout: 120_000,
