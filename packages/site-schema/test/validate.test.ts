@@ -98,6 +98,35 @@ describe('CollectionGrid', () => {
   })
 })
 
+describe('SEO por página', () => {
+  const withSeo = (seo: unknown) => ({ schema_version: 1, seo, sections: [heroSection()] })
+
+  it('acepta un objeto seo válido', () => {
+    const result = validatePageSchema(
+      withSeo({ meta_title: 'Título', meta_description: 'Desc', robots: 'noindex,follow', og_image: 'https://x/y.png' }),
+      'publish',
+    )
+    expect(result.valid).toBe(true)
+  })
+
+  it('acepta un schema sin seo (opcional)', () => {
+    expect(validatePageSchema({ schema_version: 1, sections: [heroSection()] }, 'publish').valid).toBe(true)
+  })
+
+  it('rechaza un robots fuera de la lista blanca', () => {
+    expect(validatePageSchema(withSeo({ robots: 'index' })).valid).toBe(false)
+  })
+
+  it('rechaza claves extra en seo (strict)', () => {
+    expect(validatePageSchema(withSeo({ meta_title: 'X', nope: true })).valid).toBe(false)
+  })
+
+  it('rechaza una canonical/og_image que no es URL', () => {
+    expect(validatePageSchema(withSeo({ canonical: 'no-url' })).valid).toBe(false)
+    expect(validatePageSchema(withSeo({ og_image: 'no-url' })).valid).toBe(false)
+  })
+})
+
 describe('registry & manifest', () => {
   it('expone los tipos hero, text y collection-grid', () => {
     expect(componentTypes()).toEqual(expect.arrayContaining(['hero', 'text', 'collection-grid']))

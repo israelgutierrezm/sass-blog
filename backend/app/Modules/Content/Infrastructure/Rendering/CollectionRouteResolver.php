@@ -95,11 +95,22 @@ final class CollectionRouteResolver implements DynamicRouteResolver
                 'collection' => $collection->handle,
             ],
             'seo' => [
-                'title' => $entry->title,
+                'title' => $this->entryString($entry, 'seo_title') ?? $entry->title,
+                'description' => $this->entryString($entry, 'seo_description') ?? $this->entryString($entry, 'excerpt'),
                 'canonical' => $baseUrl.$path,
                 'robots' => 'index,follow',
+                'og_image' => $this->entryString($entry, 'featured_image'),
+                'jsonld_type' => 'Article',
             ],
             'published_at' => $entry->published_at?->toIso8601String(),
         ];
+    }
+
+    /** Lee un string no vacío de entry.data, o null. */
+    private function entryString(Entry $entry, string $key): ?string
+    {
+        $value = $entry->data[$key] ?? null;
+
+        return is_string($value) && $value !== '' ? $value : null;
     }
 }

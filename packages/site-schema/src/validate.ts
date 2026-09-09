@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import type { ComponentDefinition } from './define-component'
 import { registry } from './registry'
+import { seoSchema } from './seo'
 import { type SchemaProfile, ULID_RE } from './types'
 
 function sectionSchema(def: ComponentDefinition) {
@@ -31,7 +32,9 @@ const sectionUnion = z.discriminatedUnion('type', sectionSchemas)
 export function pageSchemaForProfile(profile: SchemaProfile) {
   const sections = profile === 'publish' ? z.array(sectionUnion).min(1) : z.array(sectionUnion)
 
-  return z.object({ schema_version: z.number().int().positive(), sections }).strict()
+  return z
+    .object({ schema_version: z.number().int().positive(), seo: seoSchema.optional(), sections })
+    .strict()
 }
 
 export interface SchemaError {

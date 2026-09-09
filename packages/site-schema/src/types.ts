@@ -11,8 +11,19 @@ export interface Section {
   settings: Record<string, unknown>
 }
 
+/** SEO por página (ADR-018). Aditivo-opcional; ver `seoSchema` (zod) en seo.ts. */
+export interface PageSeo {
+  meta_title?: string
+  meta_description?: string
+  canonical?: string
+  robots?: 'index,follow' | 'noindex,follow' | 'index,nofollow' | 'noindex,nofollow'
+  og_image?: string
+  jsonld_type?: 'WebPage' | 'Article'
+}
+
 export interface PageSchema {
   schema_version: number
+  seo?: PageSeo
   sections: Section[]
 }
 

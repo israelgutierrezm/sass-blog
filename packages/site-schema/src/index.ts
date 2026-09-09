@@ -1,6 +1,7 @@
 export * from './types'
 export * from './define-component'
 export { settingsSchema, type SectionSettings } from './settings'
+export { robotsValues, seoSchema, type SeoMeta } from './seo'
 export {
   componentTypes,
   getComponent,

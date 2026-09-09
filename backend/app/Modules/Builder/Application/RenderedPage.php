@@ -28,6 +28,7 @@ final class RenderedPage
         // Desde el JSON CRUDO: preserva los objetos {} de settings/props vacíos.
         $decoded = json_decode((string) $version->getRawOriginal('schema'));
         $sections = ($decoded instanceof \stdClass && isset($decoded->sections)) ? $decoded->sections : [];
+        $seo = ($decoded instanceof \stdClass && ($decoded->seo ?? null) instanceof \stdClass) ? $decoded->seo : null;
 
         $resolver = app()->bound(SectionDataResolver::class) ? app(SectionDataResolver::class) : null;
         $resolved = SectionResolution::forSections($sections, $resolver, [
@@ -49,11 +50,22 @@ final class RenderedPage
             ],
             'resolved' => $resolved,
             'seo' => [
-                'title' => $page->title,
-                'canonical' => rtrim($baseUrl, '/').$page->path,
-                'robots' => $robots,
+                'title' => self::seoString($seo, 'meta_title') ?? $page->title,
+                'description' => self::seoString($seo, 'meta_description'),
+                'canonical' => self::seoString($seo, 'canonical') ?? (rtrim($baseUrl, '/').$page->path),
+                'robots' => self::seoString($seo, 'robots') ?? $robots,
+                'og_image' => self::seoString($seo, 'og_image'),
+                'jsonld_type' => self::seoString($seo, 'jsonld_type'),
             ],
             'published_at' => $page->published_at?->toIso8601String(),
         ];
+    }
+
+    /** Lee un string no vacío del objeto `seo` del schema, o null. */
+    private static function seoString(?\stdClass $seo, string $key): ?string
+    {
+        $value = $seo->{$key} ?? null;
+
+        return is_string($value) && $value !== '' ? $value : null;
     }
 }

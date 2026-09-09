@@ -8,6 +8,44 @@
           "type": "integer",
           "exclusiveMinimum": 0
         },
+        "seo": {
+          "type": "object",
+          "properties": {
+            "meta_title": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "meta_description": {
+              "type": "string",
+              "maxLength": 500
+            },
+            "canonical": {
+              "type": "string",
+              "format": "uri"
+            },
+            "robots": {
+              "type": "string",
+              "enum": [
+                "index,follow",
+                "noindex,follow",
+                "index,nofollow",
+                "noindex,nofollow"
+              ]
+            },
+            "og_image": {
+              "type": "string",
+              "format": "uri"
+            },
+            "jsonld_type": {
+              "type": "string",
+              "enum": [
+                "WebPage",
+                "Article"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
         "sections": {
           "type": "array",
           "items": {

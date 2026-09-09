@@ -16,7 +16,14 @@ interface RenderedPayload {
   resolved?: ResolvedSections
   // Presente sólo en el detalle dinámico de colección (artículo).
   entry?: { id: string; title: string; slug: string; collection: string }
-  seo: { title: string; canonical: string; robots: string }
+  seo: {
+    title: string
+    description?: string | null
+    canonical: string
+    robots: string
+    og_image?: string | null
+    jsonld_type?: string | null
+  }
   published_at: string | null
 }
 
@@ -51,10 +58,18 @@ const schema: PageSchema = {
 // Prefijo de sitio para los enlaces de los grids: /_site/{ulid} + card.path.
 const linkBase = `/${config.public.reservedPrefix}/${siteId}`
 
+const seoMeta = [
+  { name: 'robots', content: payload.seo.robots },
+  { property: 'og:title', content: payload.seo.title },
+  { property: 'og:url', content: payload.seo.canonical },
+  ...(payload.seo.description ? [{ name: 'description', content: payload.seo.description }, { property: 'og:description', content: payload.seo.description }] : []),
+  ...(payload.seo.og_image ? [{ property: 'og:image', content: payload.seo.og_image }] : []),
+]
+
 useHead({
   title: payload.seo.title,
   link: [{ rel: 'canonical', href: payload.seo.canonical }],
-  meta: [{ name: 'robots', content: payload.seo.robots }],
+  meta: seoMeta,
 })
 </script>
 
