@@ -16,7 +16,8 @@ it('sube una imagen: guarda el binario, lee dimensiones y crea el asset', functi
     $asset = withinWorkspace($ws, fn () => app(StoreMediaAsset::class)
         ->handle($site, UploadedFile::fake()->image('foto.jpg', 800, 600)));
 
-    expect($asset->status)->toBe('ready')
+    // Imagen recién subida: processing (el job de variantes marcará ready).
+    expect($asset->status)->toBe('processing')
         ->and($asset->width)->toBe(800)
         ->and($asset->height)->toBe(600)
         ->and($asset->mime_type)->toContain('image')

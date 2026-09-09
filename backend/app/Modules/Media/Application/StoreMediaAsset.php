@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Media\Application;
 
+use App\Modules\Media\Application\Jobs\GenerateMediaVariants;
 use App\Modules\Media\Infrastructure\Models\MediaAsset;
 use App\Modules\Sites\Infrastructure\Models\Site;
 use Illuminate\Http\UploadedFile;
@@ -39,6 +40,7 @@ final class StoreMediaAsset
         $path = (string) $file->store('media', $disk);
 
         [$width, $height] = $this->dimensions($file);
+        $isImage = str_starts_with((string) $file->getMimeType(), 'image/');
 
         $asset = new MediaAsset;
         $asset->site_id = $site->id;
@@ -50,9 +52,15 @@ final class StoreMediaAsset
         $asset->width = $width;
         $asset->height = $height;
         $asset->checksum = $checksum;
-        $asset->status = MediaAsset::STATUS_READY;
+        // Imágenes: nacen processing y el job genera variantes y marca ready. El resto
+        // (pdf, …) queda usable de inmediato.
+        $asset->status = $isImage ? MediaAsset::STATUS_PROCESSING : MediaAsset::STATUS_READY;
         $asset->created_by = $createdBy;
         $asset->save();
+
+        if ($isImage) {
+            GenerateMediaVariants::dispatch($asset->id, (int) $asset->workspace_id);
+        }
 
         return $asset;
     }
