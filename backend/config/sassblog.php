@@ -54,4 +54,26 @@ return [
         'name_prefix' => 'api.v1.',
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Media (ADR-016)
+    |--------------------------------------------------------------------------
+    |
+    | Disco del Filesystem donde viven los binarios (local en dev, S3-compat en
+    | prod). Límite de tamaño y mimes permitidos para la subida. Tamaños de las
+    | variantes de imagen (no agrandan).
+    |
+    */
+
+    'media' => [
+        'disk' => env('MEDIA_DISK', 'public'),
+        'max_kb' => (int) env('MEDIA_MAX_KB', 10240),
+        'mimes' => ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'pdf'],
+        'variants' => [
+            'thumb' => 320,
+            'medium' => 768,
+            'large' => 1440,
+        ],
+    ],
+
 ];
