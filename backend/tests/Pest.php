@@ -116,6 +116,24 @@ function publishedPage(Workspace $ws, Site $site, string $path = '/', string $he
 }
 
 /**
+ * Crea y publica un artículo vía API (requiere actingAs previo); devuelve [ulid, slug].
+ *
+ * @param  array<string, mixed>  $values
+ * @return array{0: string, 1: string}
+ */
+function publishedArticle(string $wsUlid, string $siteUlid, string $collectionUlid, array $values = []): array
+{
+    $base = "/api/v1/workspaces/{$wsUlid}/sites/{$siteUlid}/collections/{$collectionUlid}/entries";
+    $created = test()->postJson($base, [
+        'title' => 'Mi Artículo',
+        'values' => array_merge(['excerpt' => 'Un resumen', 'body' => '<p>Cuerpo</p>'], $values),
+    ])->json('data');
+    test()->postJson("{$base}/{$created['id']}/publish")->assertOk();
+
+    return [$created['id'], $created['slug']];
+}
+
+/**
  * Owner con plan Pro (capability cms.* habilitada) + un site con el preset de
  * artículos ya sembrado. Requiere haber corrido DatabaseSeeder (plan pro + caps).
  *

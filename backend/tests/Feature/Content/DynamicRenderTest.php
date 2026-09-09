@@ -12,19 +12,6 @@ beforeEach(function (): void {
     $this->seed(DatabaseSeeder::class);
 });
 
-/** Crea y publica un artículo; devuelve [ulid, slug]. */
-function publishedArticle(string $wsUlid, string $siteUlid, string $collectionUlid, array $values = []): array
-{
-    $base = "/api/v1/workspaces/{$wsUlid}/sites/{$siteUlid}/collections/{$collectionUlid}/entries";
-    $created = test()->postJson($base, [
-        'title' => 'Mi Artículo',
-        'values' => array_merge(['excerpt' => 'Un resumen', 'body' => '<p>Cuerpo</p>'], $values),
-    ])->json('data');
-    test()->postJson("{$base}/{$created['id']}/publish")->assertOk();
-
-    return [$created['id'], $created['slug']];
-}
-
 it('renderiza el detalle de un artículo publicado con bindings resueltos', function () {
     ['user' => $user, 'ws' => $ws, 'site' => $site, 'articles' => $articles] = cmsOwnerContext();
     Sanctum::actingAs($user);

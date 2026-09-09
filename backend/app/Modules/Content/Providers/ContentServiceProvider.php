@@ -9,6 +9,7 @@ use App\Modules\Content\Infrastructure\Models\Author;
 use App\Modules\Content\Infrastructure\Models\Category;
 use App\Modules\Content\Infrastructure\Models\Collection;
 use App\Modules\Content\Infrastructure\Models\Entry;
+use App\Modules\Content\Infrastructure\Observers\EntryObserver;
 use App\Modules\Content\Infrastructure\Rendering\CollectionGridResolver;
 use App\Modules\Content\Infrastructure\Rendering\CollectionRouteResolver;
 use App\Modules\Content\Listeners\ProvisionArticleContent;
@@ -44,6 +45,10 @@ final class ContentServiceProvider extends ServiceProvider
     {
         Event::listen(SiteCreated::class, [ProvisionArticleContent::class, 'handle']);
         Event::listen(EntryPublished::class, [RecordEntryPublished::class, 'handle']);
+
+        // Cambiar el slug de una entry publicada anuncia PublicPathChanged (kernel)
+        // para el slug-history de Seo, sin acoplar Content a Seo.
+        Entry::observe(EntryObserver::class);
 
         Gate::policy(Author::class, AuthorPolicy::class);
         Gate::policy(Category::class, CategoryPolicy::class);

@@ -6,6 +6,7 @@ namespace App\Modules\Builder\Providers;
 
 use App\Modules\Builder\Events\PagePublished;
 use App\Modules\Builder\Infrastructure\Models\Page;
+use App\Modules\Builder\Infrastructure\Observers\PageObserver;
 use App\Modules\Builder\Listeners\RecordPagePublished;
 use App\Modules\Builder\Policies\PagePolicy;
 use Illuminate\Support\Facades\Event;
@@ -23,5 +24,9 @@ final class BuilderServiceProvider extends ServiceProvider
 
         // Efecto cruzado por evento: publicar una página deja rastro en auditoría.
         Event::listen(PagePublished::class, [RecordPagePublished::class, 'handle']);
+
+        // Cambiar el path de una página publicada anuncia PublicPathChanged (kernel)
+        // para el slug-history de Seo, sin acoplar Builder a Seo.
+        Page::observe(PageObserver::class);
     }
 }
