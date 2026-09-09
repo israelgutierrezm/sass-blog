@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Builder\Application\RenderedPage;
 use App\Modules\Builder\Infrastructure\Models\Page;
 use App\Modules\Shared\Domain\Rendering\DynamicRouteResolver;
+use App\Modules\Shared\Domain\Rendering\RedirectResolver;
 use App\Modules\Shared\Domain\Tenancy\WorkspaceContext;
 use App\Modules\Sites\Infrastructure\Models\Site;
 use Illuminate\Http\JsonResponse;
@@ -66,6 +67,17 @@ final class PublicPageController extends Controller
                     return response()
                         ->json(['data' => $payload])
                         ->header('ETag', '"'.md5($seed).'"')
+                        ->header('Cache-Control', 'public, max-age=60');
+                }
+            }
+
+            // 3. Redirect (antes del 404), SÓLO si Seo enlazó el resolver de kernel. El
+            // cliente (Nuxt) emite el 3xx real hacia to_path.
+            if (app()->bound(RedirectResolver::class)) {
+                $redirect = app(RedirectResolver::class)->resolve($siteModel->id, $path);
+                if ($redirect !== null) {
+                    return response()
+                        ->json(['data' => ['redirect' => $redirect]])
                         ->header('Cache-Control', 'public, max-age=60');
                 }
             }

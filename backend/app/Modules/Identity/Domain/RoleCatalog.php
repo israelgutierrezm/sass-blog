@@ -19,8 +19,8 @@ final class RoleCatalog
      * @var array<string, list<string>>
      */
     public const ROLES = [
-        'owner' => ['workspace.view', 'workspace.update', 'member.manage', 'site.view', 'site.create', 'site.update', 'site.delete', 'page.view', 'page.create', 'page.update', 'page.publish', 'category.manage', 'author.manage', 'collection.view', 'collection.create', 'collection.update', 'entry.view', 'entry.create', 'entry.update', 'entry.publish', 'media.view', 'media.manage'],
-        'admin' => ['workspace.view', 'member.manage', 'site.view', 'site.create', 'site.update', 'site.delete', 'page.view', 'page.create', 'page.update', 'page.publish', 'category.manage', 'author.manage', 'collection.view', 'collection.create', 'collection.update', 'entry.view', 'entry.create', 'entry.update', 'entry.publish', 'media.view', 'media.manage'],
+        'owner' => ['workspace.view', 'workspace.update', 'member.manage', 'site.view', 'site.create', 'site.update', 'site.delete', 'page.view', 'page.create', 'page.update', 'page.publish', 'category.manage', 'author.manage', 'collection.view', 'collection.create', 'collection.update', 'entry.view', 'entry.create', 'entry.update', 'entry.publish', 'media.view', 'media.manage', 'redirect.manage'],
+        'admin' => ['workspace.view', 'member.manage', 'site.view', 'site.create', 'site.update', 'site.delete', 'page.view', 'page.create', 'page.update', 'page.publish', 'category.manage', 'author.manage', 'collection.view', 'collection.create', 'collection.update', 'entry.view', 'entry.create', 'entry.update', 'entry.publish', 'media.view', 'media.manage', 'redirect.manage'],
         'editor' => ['workspace.view', 'site.view', 'site.create', 'site.update', 'page.view', 'page.create', 'page.update', 'category.manage', 'author.manage', 'collection.view', 'entry.view', 'entry.create', 'entry.update', 'media.view', 'media.manage'],
         'viewer' => ['workspace.view', 'site.view', 'page.view', 'collection.view', 'entry.view', 'media.view'],
     ];

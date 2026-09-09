@@ -21,7 +21,11 @@ sitemap/robots servidos dinámicamente (Fase 4, SSR).
 - **Redirects y slug-history UNIFICADOS** en una tabla `redirects` (`from_path`, `to_path`,
   `status`, `source` = `manual|slug_change`, `is_active`). Un cambio de slug **auto-crea** un
   redirect `slug_change` vía evento. El `/render`, **antes del 404**, consulta redirects activos
-  → devuelve `{ redirect:{ to, status } }` y **Nuxt emite el 301/302**.
+  → devuelve `{ redirect:{ to, status } }` y **Nuxt emite el 301/302**. El resolver **sigue la
+  cadena** en el servidor (A→B→C ⇒ un único 3xx a C, mejor para SEO) con tope de saltos
+  (`MAX_HOPS=10`) y detección de ciclo: una cadena cíclica o demasiado larga **no** redirige y
+  cae al 404, cerrando el bucle infinito en el navegador. El destino es **interno** (una ruta que
+  empieza por `/`, sin `//` ni `\` ⇒ sin open-redirect); `from_path`≠`to_path`.
 - **sitemap.xml / robots.txt dinámicos:** endpoints públicos por sitio que enumeran páginas +
   entries publicadas (reusan contratos de kernel). La **misma** generación la reutiliza el build
   estático de Fase 5.

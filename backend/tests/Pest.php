@@ -5,6 +5,8 @@ declare(strict_types=1);
 use App\Models\User;
 use App\Modules\Billing\Infrastructure\Models\Plan;
 use App\Modules\Builder\Application\CreatePage;
+use App\Modules\Builder\Application\PublishPage;
+use App\Modules\Builder\Application\SaveDraft;
 use App\Modules\Builder\Infrastructure\Models\Page;
 use App\Modules\Content\Infrastructure\Models\Collection;
 use App\Modules\Identity\Application\RegisterUser;
@@ -99,6 +101,18 @@ function ownerWithSite(string $email = 'owner@example.com'): array
 function makePage(Workspace $ws, Site $site, string $title = 'Home', string $path = '/'): Page
 {
     return withinWorkspace($ws, fn () => app(CreatePage::class)->handle($site, $title, $path));
+}
+
+/** Crea, escribe y publica una página; devuelve el modelo publicado. */
+function publishedPage(Workspace $ws, Site $site, string $path = '/', string $heading = 'Público'): Page
+{
+    $page = makePage($ws, $site, 'Home', $path);
+
+    return withinWorkspace($ws, function () use ($page, $heading) {
+        app(SaveDraft::class)->handle($page, heroSchema($heading));
+
+        return app(PublishPage::class)->handle($page->fresh());
+    });
 }
 
 /**

@@ -27,6 +27,15 @@ interface RenderedPayload {
   published_at: string | null
 }
 
+// El render puede devolver un redirect (SEO, ADR-018) en vez de una página.
+interface RedirectPayload {
+  redirect: { to: string; status: number }
+}
+
+type RenderResponse = RenderedPayload | RedirectPayload
+
+const isRedirect = (p: RenderResponse): p is RedirectPayload => 'redirect' in p
+
 const route = useRoute()
 const config = useRuntimeConfig()
 
@@ -41,7 +50,7 @@ if (!siteId) {
 const base = import.meta.server ? config.apiInternalBase : config.public.apiBase
 
 const { data, error } = await useAsyncData(`render:${siteId}:${path}`, () =>
-  $fetch<{ data: RenderedPayload }>(`${base}/public/sites/${siteId}/render`, { query: { path } }),
+  $fetch<{ data: RenderResponse }>(`${base}/public/sites/${siteId}/render`, { query: { path } }),
 )
 
 if (error.value || !data.value) {
@@ -50,29 +59,43 @@ if (error.value || !data.value) {
 }
 
 const payload = data.value.data
-const schema: PageSchema = {
-  schema_version: payload.page.schema_version,
-  sections: payload.page.sections,
-}
 
 // Prefijo de sitio para los enlaces de los grids: /_site/{ulid} + card.path.
 const linkBase = `/${config.public.reservedPrefix}/${siteId}`
 
-const seoMeta = [
-  { name: 'robots', content: payload.seo.robots },
-  { property: 'og:title', content: payload.seo.title },
-  { property: 'og:url', content: payload.seo.canonical },
-  ...(payload.seo.description ? [{ name: 'description', content: payload.seo.description }, { property: 'og:description', content: payload.seo.description }] : []),
-  ...(payload.seo.og_image ? [{ property: 'og:image', content: payload.seo.og_image }] : []),
-]
+// Redirect (ADR-018): el backend lo resolvió ANTES del 404; Nuxt emite el 301/302
+// real hacia el destino dentro del mismo sitio. En SSR corta la respuesta aquí.
+if (isRedirect(payload)) {
+  await navigateTo(`${linkBase}${payload.redirect.to}`, {
+    redirectCode: payload.redirect.status,
+    replace: true,
+  })
+}
 
-useHead({
-  title: payload.seo.title,
-  link: [{ rel: 'canonical', href: payload.seo.canonical }],
-  meta: seoMeta,
-})
+// Sólo hay render normal cuando NO es redirect (narrowed a RenderedPayload).
+const content = isRedirect(payload) ? null : payload
+const schema: PageSchema | null = content
+  ? { schema_version: content.page.schema_version, sections: content.page.sections }
+  : null
+const resolved = content?.resolved
+
+if (content) {
+  const seoMeta = [
+    { name: 'robots', content: content.seo.robots },
+    { property: 'og:title', content: content.seo.title },
+    { property: 'og:url', content: content.seo.canonical },
+    ...(content.seo.description ? [{ name: 'description', content: content.seo.description }, { property: 'og:description', content: content.seo.description }] : []),
+    ...(content.seo.og_image ? [{ property: 'og:image', content: content.seo.og_image }] : []),
+  ]
+
+  useHead({
+    title: content.seo.title,
+    link: [{ rel: 'canonical', href: content.seo.canonical }],
+    meta: seoMeta,
+  })
+}
 </script>
 
 <template>
-  <PageRenderer :schema="schema" :resolved="payload.resolved" :link-base="linkBase" />
+  <PageRenderer v-if="schema" :schema="schema" :resolved="resolved" :link-base="linkBase" />
 </template>

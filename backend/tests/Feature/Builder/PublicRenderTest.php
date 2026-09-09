@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Modules\Builder\Application\PublishPage;
 use App\Modules\Builder\Application\SaveDraft;
 use App\Modules\Sites\Infrastructure\Models\Site;
 use Database\Seeders\DatabaseSeeder;
@@ -12,18 +11,6 @@ use Laravel\Sanctum\Sanctum;
 beforeEach(function (): void {
     $this->seed(DatabaseSeeder::class);
 });
-
-/** Crea, escribe y publica una página; devuelve el modelo publicado. */
-function publishedPage($ws, Site $site, string $path = '/', string $heading = 'Público')
-{
-    $page = makePage($ws, $site, 'Home', $path);
-
-    return withinWorkspace($ws, function () use ($page, $heading) {
-        app(SaveDraft::class)->handle($page, heroSchema($heading));
-
-        return app(PublishPage::class)->handle($page->fresh());
-    });
-}
 
 it('renderiza una página publicada por su path (sin auth)', function () {
     ['ws' => $ws, 'site' => $site] = ownerWithSite();
