@@ -36,6 +36,7 @@ return [
         'Billing' => ['layer' => 'domain', 'label' => 'Planes y cobro', 'depends_on' => []],
         'Builder' => ['layer' => 'domain', 'label' => 'Constructor',    'depends_on' => ['Sites']],
         'Content' => ['layer' => 'domain', 'label' => 'Contenido',      'depends_on' => ['Sites', 'Builder']],
+        'Media' => ['layer' => 'domain', 'label' => 'Medios',         'depends_on' => ['Sites']],
     ],
 
     /*
