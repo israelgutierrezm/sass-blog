@@ -82,12 +82,31 @@ export const entriesApi = {
     http.post<ApiItem<EntryDto>>(`${entriesBase(ws, site, collection)}/${entry}/publish`),
 }
 
+function categoriesBase(ws: string, site: string, collection: string): string {
+  return `${siteBase(ws, site)}/collections/${collection}/categories`
+}
+
 export const categoriesApi = {
   list: (ws: string, site: string, collection: string) =>
-    http.get<ApiCollection<CategoryDto>>(`${siteBase(ws, site)}/collections/${collection}/categories`),
+    http.get<ApiCollection<CategoryDto>>(categoriesBase(ws, site, collection)),
+  create: (ws: string, site: string, collection: string, input: { name: string; description?: string }) =>
+    http.post<ApiItem<CategoryDto>>(categoriesBase(ws, site, collection), input),
+  update: (ws: string, site: string, collection: string, category: string, input: { name?: string; description?: string }) =>
+    http.patch<ApiItem<CategoryDto>>(`${categoriesBase(ws, site, collection)}/${category}`, input),
+  remove: (ws: string, site: string, collection: string, category: string) =>
+    http.del<null>(`${categoriesBase(ws, site, collection)}/${category}`),
+}
+
+function authorsBase(ws: string, site: string): string {
+  return `${siteBase(ws, site)}/authors`
 }
 
 export const authorsApi = {
-  list: (ws: string, site: string) =>
-    http.get<ApiCollection<AuthorDto>>(`${siteBase(ws, site)}/authors`),
+  list: (ws: string, site: string) => http.get<ApiCollection<AuthorDto>>(authorsBase(ws, site)),
+  create: (ws: string, site: string, input: { name: string; bio?: string }) =>
+    http.post<ApiItem<AuthorDto>>(authorsBase(ws, site), input),
+  update: (ws: string, site: string, author: string, input: { name?: string; bio?: string }) =>
+    http.patch<ApiItem<AuthorDto>>(`${authorsBase(ws, site)}/${author}`, input),
+  remove: (ws: string, site: string, author: string) =>
+    http.del<null>(`${authorsBase(ws, site)}/${author}`),
 }

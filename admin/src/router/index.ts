@@ -57,6 +57,18 @@ export const router = createRouter({
       component: () => import('../views/EntryEditorView.vue'),
       props: true,
     },
+    {
+      path: '/w/:ws/s/:site/authors',
+      name: 'authors',
+      component: () => import('../views/AuthorsView.vue'),
+      props: true,
+    },
+    {
+      path: '/w/:ws/s/:site/c/:collection/categories',
+      name: 'categories',
+      component: () => import('../views/CategoriesView.vue'),
+      props: true,
+    },
   ],
 })
 

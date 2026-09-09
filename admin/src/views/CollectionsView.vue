@@ -12,9 +12,14 @@ onMounted(() => content.loadCollections(props.ws, props.site))
   <div class="mx-auto max-w-3xl px-6 py-8">
     <div class="mb-6 flex items-center justify-between">
       <h1 class="text-2xl font-semibold">Colecciones</h1>
-      <RouterLink :to="{ name: 'pages', params: { ws, site } }" class="text-sm text-blue-600 hover:underline">
-        Páginas →
-      </RouterLink>
+      <div class="flex items-center gap-4 text-sm">
+        <RouterLink :to="{ name: 'authors', params: { ws, site } }" data-testid="nav-authors" class="text-blue-600 hover:underline">
+          Autores
+        </RouterLink>
+        <RouterLink :to="{ name: 'pages', params: { ws, site } }" class="text-blue-600 hover:underline">
+          Páginas →
+        </RouterLink>
+      </div>
     </div>
 
     <p v-if="content.loading" class="text-gray-500">Cargando…</p>

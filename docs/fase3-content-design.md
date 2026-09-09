@@ -161,8 +161,11 @@ Pruebas transversales: aislamiento por-site (entries, pivote, referencias), anti
   componentes dinámicos (Hero/Text intactos, sin fuga de atributos, ADR-008).
 - **admin**: vistas Collections/Entries/EntryEditor; `EntryFieldControl` deriva el control del
   tipo del campo (richtext=textarea, media=URL, relation=ULID MVP, json crudo). El editor guarda
-  borrador y publica. **Diferido (13b):** pantallas CRUD de taxonomía (categorías/autores) y el
-  panel del CollectionGrid en el Builder (dynamic-select).
+  borrador y publica.
+- **admin (13b)**: pantallas CRUD de taxonomía (AuthorsView nivel-site, CategoriesView por
+  colección) y el CollectionGrid en el Builder — `FieldControl` gana `number` (arregla `limit`/
+  `columns` que se guardaban como string) y `dynamic-select`; `PropsPanel` puebla las opciones por
+  API (colecciones del site; categorías de la colección elegida). Verificado en navegador.
 - **renderer**: `[...slug].vue` reenvía `resolved` + `linkBase=/{reservedPrefix}/{siteId}` al
   `PageRenderer`. Verificado en navegador (SSR) el home-con-grid y el artículo con bindings.
 - **Reprovisión de RBAC**: el comando quedó como **`identity:reprovision-rbac`** (no

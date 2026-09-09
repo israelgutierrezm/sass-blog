@@ -18,13 +18,22 @@ onMounted(() => entry.load(props.ws, props.site, props.collection))
         <span class="text-gray-300">/</span>
         <h1 class="text-2xl font-semibold">Entradas</h1>
       </div>
-      <RouterLink
-        :to="{ name: 'entry-new', params: { ws, site, collection } }"
-        data-testid="entry-new"
-        class="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-      >
-        Nueva entrada
-      </RouterLink>
+      <div class="flex items-center gap-4">
+        <RouterLink
+          :to="{ name: 'categories', params: { ws, site, collection } }"
+          data-testid="nav-categories"
+          class="text-sm text-blue-600 hover:underline"
+        >
+          Categorías
+        </RouterLink>
+        <RouterLink
+          :to="{ name: 'entry-new', params: { ws, site, collection } }"
+          data-testid="entry-new"
+          class="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+        >
+          Nueva entrada
+        </RouterLink>
+      </div>
     </div>
 
     <p v-if="entry.loading" class="text-gray-500">Cargando…</p>

@@ -42,7 +42,8 @@ Flujo: Create Article → Publish → CollectionGrid → Homepage → Article Pa
 Módulo `Content` (motor híbrido, validación dinámica, CollectionGrid embebido, template-como-Page
 con bindings seguros). Implementado en 15 sub-slices, cada uno verificado por mutación.
 Vertical **verificado en navegador** (admin → publicar → renderer SSR con bindings) y en **E2E
-Playwright**. Deuda 13b: pantallas CRUD de taxonomía + panel del CollectionGrid en el Builder.
+Playwright**. Incluye 13b: pantallas CRUD de taxonomía (autores/categorías) y el panel del
+CollectionGrid en el Builder (dynamic-select por API + control numérico).
 
 ## Fase 4 — Media + Menus + SEO
 Media library (metadata + transformaciones por job), Menus jerárquicos, SEO de primera clase
