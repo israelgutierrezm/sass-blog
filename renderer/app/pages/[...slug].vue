@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PageRenderer } from '@sass-blog/site-components'
+import { PageRenderer, type ResolvedSections } from '@sass-blog/site-components'
 import type { PageSchema } from '@sass-blog/site-schema'
 
 interface RenderedPayload {
@@ -7,10 +7,15 @@ interface RenderedPayload {
   page: {
     id: string
     path: string
+    kind?: string
     version_id: string
     schema_version: number
     sections: PageSchema['sections']
   }
+  // Sidecar de secciones dinámicas (CollectionGrid). Vacío = {} (ADR-013).
+  resolved?: ResolvedSections
+  // Presente sólo en el detalle dinámico de colección (artículo).
+  entry?: { id: string; title: string; slug: string; collection: string }
   seo: { title: string; canonical: string; robots: string }
   published_at: string | null
 }
@@ -43,6 +48,9 @@ const schema: PageSchema = {
   sections: payload.page.sections,
 }
 
+// Prefijo de sitio para los enlaces de los grids: /_site/{ulid} + card.path.
+const linkBase = `/${config.public.reservedPrefix}/${siteId}`
+
 useHead({
   title: payload.seo.title,
   link: [{ rel: 'canonical', href: payload.seo.canonical }],
@@ -51,5 +59,5 @@ useHead({
 </script>
 
 <template>
-  <PageRenderer :schema="schema" />
+  <PageRenderer :schema="schema" :resolved="payload.resolved" :link-base="linkBase" />
 </template>

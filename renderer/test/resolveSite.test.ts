@@ -16,4 +16,14 @@ describe('resolveSite', () => {
     expect(resolveSite(['about'], '_site').siteId).toBeNull()
     expect(resolveSite([], '_site').siteId).toBeNull()
   })
+
+  it('round-trip de linkBase: /_site/{ulid} + card.path resuelve al mismo sitio y path', () => {
+    const siteId = '01ABC'
+    const linkBase = `/_site/${siteId}`
+    const cardPath = '/blog/mi-articulo'
+    // El href que arma CollectionGrid.vue: linkBase + card.path.
+    const segments = `${linkBase}${cardPath}`.split('/').filter((s) => s.length > 0)
+
+    expect(resolveSite(segments, '_site')).toEqual({ siteId, path: cardPath })
+  })
 })
