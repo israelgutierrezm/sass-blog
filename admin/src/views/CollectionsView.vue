@@ -13,6 +13,9 @@ onMounted(() => content.loadCollections(props.ws, props.site))
     <div class="mb-6 flex items-center justify-between">
       <h1 class="text-2xl font-semibold">Colecciones</h1>
       <div class="flex items-center gap-4 text-sm">
+        <RouterLink :to="{ name: 'media', params: { ws, site } }" data-testid="nav-media" class="text-blue-600 hover:underline">
+          Medios
+        </RouterLink>
         <RouterLink :to="{ name: 'authors', params: { ws, site } }" data-testid="nav-authors" class="text-blue-600 hover:underline">
           Autores
         </RouterLink>

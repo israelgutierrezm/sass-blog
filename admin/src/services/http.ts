@@ -34,22 +34,17 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+function authHeaders(): Record<string, string> {
   const headers: Record<string, string> = { Accept: 'application/json' }
   const token = getToken()
   if (token) {
     headers.Authorization = `Bearer ${token}`
   }
-  if (body !== undefined) {
-    headers['Content-Type'] = 'application/json'
-  }
 
-  const response = await fetch(`${BASE}${path}`, {
-    method,
-    headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  })
+  return headers
+}
 
+async function parse<T>(response: Response): Promise<T> {
   const text = await response.text()
   const json = text ? JSON.parse(text) : null
 
@@ -63,9 +58,32 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   return json as T
 }
 
+async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+  const headers = authHeaders()
+  if (body !== undefined) {
+    headers['Content-Type'] = 'application/json'
+  }
+
+  return parse<T>(await fetch(`${BASE}${path}`, {
+    method,
+    headers,
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  }))
+}
+
+/** Subida multipart: NO fija Content-Type (el navegador pone el boundary). */
+async function upload<T>(path: string, form: FormData): Promise<T> {
+  return parse<T>(await fetch(`${BASE}${path}`, {
+    method: 'POST',
+    headers: authHeaders(),
+    body: form,
+  }))
+}
+
 export const http = {
   get: <T>(path: string) => request<T>('GET', path),
   post: <T>(path: string, body?: unknown) => request<T>('POST', path, body),
   patch: <T>(path: string, body?: unknown) => request<T>('PATCH', path, body),
   del: <T>(path: string) => request<T>('DELETE', path),
+  upload: <T>(path: string, form: FormData) => upload<T>(path, form),
 }

@@ -127,6 +127,21 @@ export interface EntryDto extends EntrySummaryDto {
   categories: EntryRefDto[]
 }
 
+export interface MediaAssetDto {
+  id: string
+  url: string
+  original_filename: string
+  mime_type: string
+  size_bytes: number
+  width: number | null
+  height: number | null
+  alt: string | null
+  title: string | null
+  status: string
+  variants?: Record<string, string>
+  created_at?: string
+}
+
 /** Tarjeta resuelta para el CollectionGrid (sidecar `resolved`). */
 export interface EntryCard {
   id: string

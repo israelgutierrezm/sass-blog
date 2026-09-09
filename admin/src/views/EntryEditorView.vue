@@ -135,6 +135,8 @@ function toggleCategory(id: string, checked: boolean): void {
         :key="field.id"
         :field="field"
         :model-value="values[field.key]"
+        :ws="ws"
+        :site="site"
         @update:model-value="values[field.key] = $event"
       />
 

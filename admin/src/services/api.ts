@@ -6,6 +6,7 @@ import type {
   CollectionDto,
   EntryDto,
   EntrySummaryDto,
+  MediaAssetDto,
   PageDto,
   PageSchema,
   PageSummaryDto,
@@ -109,4 +110,25 @@ export const authorsApi = {
     http.patch<ApiItem<AuthorDto>>(`${authorsBase(ws, site)}/${author}`, input),
   remove: (ws: string, site: string, author: string) =>
     http.del<null>(`${authorsBase(ws, site)}/${author}`),
+}
+
+export const mediaApi = {
+  list: (ws: string, site: string, page = 1, type?: 'image') => {
+    const query = new URLSearchParams({ page: String(page) })
+    if (type) {
+      query.set('type', type)
+    }
+
+    return http.get<ApiCollection<MediaAssetDto>>(`${siteBase(ws, site)}/media?${query.toString()}`)
+  },
+  upload: (ws: string, site: string, file: File) => {
+    const form = new FormData()
+    form.append('file', file)
+
+    return http.upload<ApiItem<MediaAssetDto>>(`${siteBase(ws, site)}/media`, form)
+  },
+  update: (ws: string, site: string, id: string, input: { alt?: string | null; title?: string | null }) =>
+    http.patch<ApiItem<MediaAssetDto>>(`${siteBase(ws, site)}/media/${id}`, input),
+  remove: (ws: string, site: string, id: string) =>
+    http.del<null>(`${siteBase(ws, site)}/media/${id}`),
 }
