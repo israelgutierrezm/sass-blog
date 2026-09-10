@@ -52,7 +52,13 @@ Media library (metadata + transformaciones por job), Menus jerárquicos, SEO de 
 **Diseño aprobado** (`docs/fase4-design.md`, ADRs 016–018). Tres sub-fases en orden
 **Media → SEO → Menús**. Decisiones: media por-sitio; campo `media` = URL + selector; menús como
 sección `navigation` (sidecar `resolved`). SEO servido dinámicamente (los archivos estáticos
-sitemap/robots quedan en Fase 5). En curso: **4A Media**.
+sitemap/robots quedan en Fase 5).
+
+- **4A Media** ✅ — librería por-sitio, dedup por checksum, variantes por job, picker en el admin, E2E.
+- **4B SEO** ✅ — `seo` en el page schema, redirects (API manual + render 301 con anti-open-redirect
+  y anti-bucle), slug-history por evento de kernel, sitemap.xml/robots.txt dinámicos, admin (panel
+  SEO + gestión de redirects), E2E (slug→301 + sitemap).
+- **4C Menús** — pendiente: módulo `Navigation`, sección `navigation` con sidecar `resolved`.
 
 ## Fase 5 — Static Publishing
 Site → Publish Static → Generate → Export Artifact, reutilizando page schemas y
