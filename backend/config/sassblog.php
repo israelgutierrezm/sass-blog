@@ -38,6 +38,7 @@ return [
         'Content' => ['layer' => 'domain', 'label' => 'Contenido',      'depends_on' => ['Sites', 'Builder']],
         'Media' => ['layer' => 'domain', 'label' => 'Medios',         'depends_on' => ['Sites']],
         'Seo' => ['layer' => 'domain', 'label' => 'SEO',            'depends_on' => ['Sites']],
+        'Navigation' => ['layer' => 'domain', 'label' => 'Navegación',     'depends_on' => ['Sites', 'Builder', 'Content']],
     ],
 
     /*
