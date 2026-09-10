@@ -70,6 +70,12 @@ export const router = createRouter({
       props: true,
     },
     {
+      path: '/w/:ws/s/:site/redirects',
+      name: 'redirects',
+      component: () => import('../views/RedirectsView.vue'),
+      props: true,
+    },
+    {
       path: '/w/:ws/s/:site/c/:collection/categories',
       name: 'categories',
       component: () => import('../views/CategoriesView.vue'),

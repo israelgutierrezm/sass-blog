@@ -10,6 +10,7 @@ import type {
   PageDto,
   PageSchema,
   PageSummaryDto,
+  RedirectDto,
   SiteDto,
   WorkspaceDto,
 } from '@sass-blog/shared-types'
@@ -131,4 +132,22 @@ export const mediaApi = {
     http.patch<ApiItem<MediaAssetDto>>(`${siteBase(ws, site)}/media/${id}`, input),
   remove: (ws: string, site: string, id: string) =>
     http.del<null>(`${siteBase(ws, site)}/media/${id}`),
+}
+
+export interface RedirectInput {
+  from_path?: string
+  to_path?: string
+  status?: number
+  is_active?: boolean
+}
+
+export const redirectsApi = {
+  list: (ws: string, site: string) =>
+    http.get<ApiCollection<RedirectDto>>(`${siteBase(ws, site)}/redirects`),
+  create: (ws: string, site: string, input: RedirectInput) =>
+    http.post<ApiItem<RedirectDto>>(`${siteBase(ws, site)}/redirects`, input),
+  update: (ws: string, site: string, id: string, input: RedirectInput) =>
+    http.patch<ApiItem<RedirectDto>>(`${siteBase(ws, site)}/redirects/${id}`, input),
+  remove: (ws: string, site: string, id: string) =>
+    http.del<null>(`${siteBase(ws, site)}/redirects/${id}`),
 }

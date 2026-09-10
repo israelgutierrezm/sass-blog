@@ -1,4 +1,4 @@
-import type { PageDto, PageSchema } from '@sass-blog/shared-types'
+import type { PageDto, PageSchema, PageSeo } from '@sass-blog/shared-types'
 import { emptyPageSchema } from '@sass-blog/site-schema'
 import { defineStore } from 'pinia'
 import {
@@ -71,6 +71,12 @@ export const useBuilderStore = defineStore('builder', {
 
     updateProps(id: string, patch: Record<string, unknown>): void {
       this.schema = updateSectionProps(this.schema, id, patch)
+      this.dirty = true
+    },
+
+    /** Fija (o limpia) el SEO por página del schema. undefined omite la clave (JSON). */
+    setSeo(seo: PageSeo | undefined): void {
+      this.schema = { ...this.schema, seo }
       this.dirty = true
     },
 

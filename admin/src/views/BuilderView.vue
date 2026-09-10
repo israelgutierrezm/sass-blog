@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import CanvasPreview from '../components/builder/CanvasPreview.vue'
 import PropsPanel from '../components/builder/PropsPanel.vue'
 import SectionList from '../components/builder/SectionList.vue'
+import SeoPanel from '../components/builder/SeoPanel.vue'
 import { ApiError } from '../services/http'
 import { useBuilderStore } from '../stores/builder'
 
@@ -11,6 +12,7 @@ const builder = useBuilderStore()
 
 const loading = ref(true)
 const error = ref('')
+const showSeo = ref(false)
 
 const rendererBase = import.meta.env.VITE_RENDERER_BASE ?? 'http://localhost:3000'
 const publicUrl = computed(() => {
@@ -72,6 +74,9 @@ async function preview(): Promise<void> {
           data-testid="view-public"
           class="rounded-md border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50"
         >Ver público</a>
+        <button data-testid="seo" class="rounded-md border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50" @click="showSeo = true">
+          SEO
+        </button>
         <button data-testid="preview" class="rounded-md border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50" @click="preview">
           Vista previa
         </button>
@@ -91,5 +96,7 @@ async function preview(): Promise<void> {
       <CanvasPreview />
       <PropsPanel />
     </div>
+
+    <SeoPanel v-if="showSeo" :ws="ws" :site="site" @close="showSeo = false" />
   </div>
 </template>

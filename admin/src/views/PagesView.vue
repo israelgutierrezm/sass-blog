@@ -40,13 +40,22 @@ async function create(): Promise<void> {
   <div class="mx-auto max-w-3xl px-6 py-8">
     <div class="mb-6 flex items-center justify-between">
       <h1 class="text-2xl font-semibold">Páginas</h1>
-      <RouterLink
-        :to="{ name: 'collections', params: { ws, site } }"
-        data-testid="nav-collections"
-        class="text-sm text-blue-600 hover:underline"
-      >
-        Colecciones →
-      </RouterLink>
+      <div class="flex items-center gap-4">
+        <RouterLink
+          :to="{ name: 'redirects', params: { ws, site } }"
+          data-testid="nav-redirects"
+          class="text-sm text-blue-600 hover:underline"
+        >
+          Redirects
+        </RouterLink>
+        <RouterLink
+          :to="{ name: 'collections', params: { ws, site } }"
+          data-testid="nav-collections"
+          class="text-sm text-blue-600 hover:underline"
+        >
+          Colecciones →
+        </RouterLink>
+      </div>
     </div>
 
     <form class="mb-6 flex flex-wrap items-end gap-3 rounded-lg border border-gray-200 bg-white p-4" @submit.prevent="create">

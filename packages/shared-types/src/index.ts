@@ -142,6 +142,18 @@ export interface MediaAssetDto {
   created_at?: string
 }
 
+/** Redirect por-sitio (ADR-018). `status` = 301|302; `source` = manual|slug_change. */
+export interface RedirectDto {
+  id: string
+  from_path: string
+  to_path: string
+  status: number
+  source: string
+  is_active: boolean
+  created_at?: string
+  updated_at?: string
+}
+
 /** Tarjeta resuelta para el CollectionGrid (sidecar `resolved`). */
 export interface EntryCard {
   id: string
@@ -154,4 +166,4 @@ export interface EntryCard {
   category: { name: string; slug: string } | null
 }
 
-export type { PageSchema } from '@sass-blog/site-schema'
+export type { PageSchema, PageSeo } from '@sass-blog/site-schema'
