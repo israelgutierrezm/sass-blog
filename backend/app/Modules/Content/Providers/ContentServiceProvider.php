@@ -12,6 +12,7 @@ use App\Modules\Content\Infrastructure\Models\Entry;
 use App\Modules\Content\Infrastructure\Observers\EntryObserver;
 use App\Modules\Content\Infrastructure\Rendering\CollectionGridResolver;
 use App\Modules\Content\Infrastructure\Rendering\CollectionRouteResolver;
+use App\Modules\Content\Infrastructure\Rendering\EntrySitemapSource;
 use App\Modules\Content\Listeners\ProvisionArticleContent;
 use App\Modules\Content\Listeners\RecordEntryPublished;
 use App\Modules\Content\Policies\AuthorPolicy;
@@ -20,6 +21,7 @@ use App\Modules\Content\Policies\CollectionPolicy;
 use App\Modules\Content\Policies\EntryPolicy;
 use App\Modules\Shared\Domain\Rendering\DynamicRouteResolver;
 use App\Modules\Shared\Domain\Rendering\SectionDataResolver;
+use App\Modules\Shared\Domain\Rendering\SitemapUrlSource;
 use App\Modules\Sites\Events\SiteCreated;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
@@ -39,6 +41,9 @@ final class ContentServiceProvider extends ServiceProvider
         // abstracción, sin depender de Content (degradación elegante si no se enlaza).
         $this->app->bind(DynamicRouteResolver::class, CollectionRouteResolver::class);
         $this->app->bind(SectionDataResolver::class, CollectionGridResolver::class);
+
+        // Aporta las entries publicadas enrutables al sitemap (contrato de kernel).
+        $this->app->tag([EntrySitemapSource::class], SitemapUrlSource::TAG);
     }
 
     public function boot(): void

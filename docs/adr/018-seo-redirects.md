@@ -32,8 +32,11 @@ sitemap/robots servidos dinámicamente (Fase 4, SSR).
   cae al 404, cerrando el bucle infinito en el navegador. El destino es **interno** (una ruta que
   empieza por `/`, sin `//` ni `\` ⇒ sin open-redirect); `from_path`≠`to_path`.
 - **sitemap.xml / robots.txt dinámicos:** endpoints públicos por sitio que enumeran páginas +
-  entries publicadas (reusan contratos de kernel). La **misma** generación la reutiliza el build
-  estático de Fase 5.
+  entries publicadas. Cada módulo de dominio aporta sus URLs por el contrato de kernel
+  `SitemapUrlSource` (etiquetado en el contenedor con `SitemapUrlSource::TAG`); Seo recolecta
+  todas las fuentes sin conocer los módulos. Las `<loc>` son absolutas con la `base_url` del sitio
+  (settings) o, en su defecto, el host del request. La **misma** generación (`SitemapGenerator`)
+  la reutiliza el build estático de Fase 5. El renderer sirve ambos como proxy en la ruta del sitio.
 
 ## Alternativas consideradas
 

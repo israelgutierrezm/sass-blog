@@ -7,8 +7,10 @@ namespace App\Modules\Builder\Providers;
 use App\Modules\Builder\Events\PagePublished;
 use App\Modules\Builder\Infrastructure\Models\Page;
 use App\Modules\Builder\Infrastructure\Observers\PageObserver;
+use App\Modules\Builder\Infrastructure\Rendering\PageSitemapSource;
 use App\Modules\Builder\Listeners\RecordPagePublished;
 use App\Modules\Builder\Policies\PagePolicy;
+use App\Modules\Shared\Domain\Rendering\SitemapUrlSource;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -18,6 +20,13 @@ use Illuminate\Support\ServiceProvider;
  */
 final class BuilderServiceProvider extends ServiceProvider
 {
+    public function register(): void
+    {
+        // Aporta las páginas publicadas al sitemap (contrato de kernel), sin que Seo
+        // conozca al Builder. Sin Seo, la etiqueta simplemente no se consume.
+        $this->app->tag([PageSitemapSource::class], SitemapUrlSource::TAG);
+    }
+
     public function boot(): void
     {
         Gate::policy(Page::class, PagePolicy::class);
