@@ -11,7 +11,7 @@ export type FieldControl =
   | 'dynamic-select'
 
 /** Fuente de opciones que el admin resuelve por API para un control dynamic-select. */
-export type OptionsSource = 'collections' | 'categories'
+export type OptionsSource = 'collections' | 'categories' | 'menus'
 
 /** Descriptor de UI de un prop (el admin deriva sus controles de aquí). */
 export interface FieldDescriptor {

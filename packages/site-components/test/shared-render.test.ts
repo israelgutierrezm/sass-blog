@@ -122,3 +122,49 @@ describe('CollectionGrid (canal resolved)', () => {
     expect(html.toLowerCase()).not.toContain('resolveddata')
   })
 })
+
+const NAV_ID = '01ARZ3NDEKTSV4RRFFQ69G5FAV'
+
+const navSchema: PageSchema = {
+  schema_version: 1,
+  sections: [
+    {
+      id: NAV_ID,
+      type: 'navigation',
+      variant: 'navigation-horizontal',
+      visible: true,
+      props: { menu: 'primary' },
+      settings: {},
+    },
+  ],
+}
+
+const navResolved = {
+  [NAV_ID]: {
+    items: [
+      { label: 'Inicio', url: '/', children: [] },
+      { label: 'Acerca', url: '/acerca', children: [{ label: 'Equipo', url: '/acerca/equipo', children: [] }] },
+      { label: 'Externo', url: 'https://ejemplo.com', children: [] },
+    ],
+    total: 3,
+  },
+}
+
+describe('Navigation (canal resolved)', () => {
+  it('pinta el árbol: hrefs internos prefijados, externos tal cual, hijos anidados (SSR)', async () => {
+    const html = await renderToString(
+      createSSRApp(PageRenderer, { schema: navSchema, resolved: navResolved, linkBase: '/_site/ABC' }),
+    )
+    expect(html).toContain('Inicio')
+    expect(html).toContain('href="/_site/ABC/"') // home interno prefijado
+    expect(html).toContain('href="/_site/ABC/acerca"')
+    expect(html).toContain('Equipo')
+    expect(html).toContain('href="/_site/ABC/acerca/equipo"') // hijo anidado
+    expect(html).toContain('href="https://ejemplo.com"') // externo tal cual
+  })
+
+  it('sin datos resueltos no pinta el nav', async () => {
+    const html = await renderToString(createSSRApp(PageRenderer, { schema: navSchema }))
+    expect(html).not.toContain('st-nav__link')
+  })
+})

@@ -367,6 +367,54 @@
                   "settings"
                 ],
                 "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "navigation"
+                  },
+                  "variant": {
+                    "type": "string",
+                    "enum": [
+                      "navigation-horizontal",
+                      "navigation-vertical"
+                    ]
+                  },
+                  "visible": {
+                    "type": "boolean"
+                  },
+                  "props": {
+                    "type": "object",
+                    "properties": {
+                      "menu": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "required": [
+                      "menu"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "settings": {
+                    "$ref": "#/definitions/PageSchemaPublish/properties/sections/items/anyOf/0/properties/settings"
+                  }
+                },
+                "required": [
+                  "id",
+                  "type",
+                  "variant",
+                  "visible",
+                  "props",
+                  "settings"
+                ],
+                "additionalProperties": false
               }
             ]
           },

@@ -98,6 +98,35 @@ describe('CollectionGrid', () => {
   })
 })
 
+function navSection(props: Record<string, unknown> = {}, id = ULID) {
+  return {
+    id,
+    type: 'navigation',
+    variant: 'navigation-horizontal',
+    visible: true,
+    props: { menu: 'primary', ...props },
+    settings: {},
+  }
+}
+
+describe('Navigation', () => {
+  it('acepta una sección con un menú (handle)', () => {
+    expect(validatePageSchema({ schema_version: 1, sections: [navSection()] }, 'publish').valid).toBe(true)
+  })
+
+  it('exige menu', () => {
+    expect(validatePageSchema({ schema_version: 1, sections: [{ ...navSection(), props: {} }] }).valid).toBe(false)
+  })
+
+  it('rechaza una variante desconocida', () => {
+    expect(validatePageSchema({ schema_version: 1, sections: [{ ...navSection(), variant: 'navigation-mega' }] }).valid).toBe(false)
+  })
+
+  it('rechaza props extra (strict)', () => {
+    expect(validatePageSchema({ schema_version: 1, sections: [navSection({ nope: 1 })] }).valid).toBe(false)
+  })
+})
+
 describe('SEO por página', () => {
   const withSeo = (seo: unknown) => ({ schema_version: 1, seo, sections: [heroSection()] })
 
@@ -128,8 +157,8 @@ describe('SEO por página', () => {
 })
 
 describe('registry & manifest', () => {
-  it('expone los tipos hero, text y collection-grid', () => {
-    expect(componentTypes()).toEqual(expect.arrayContaining(['hero', 'text', 'collection-grid']))
+  it('expone los tipos hero, text, collection-grid y navigation', () => {
+    expect(componentTypes()).toEqual(expect.arrayContaining(['hero', 'text', 'collection-grid', 'navigation']))
   })
 
   it('el manifest lista componentes con variantes y defaults', () => {
