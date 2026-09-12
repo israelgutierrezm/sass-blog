@@ -7,6 +7,8 @@ import type {
   EntryDto,
   EntrySummaryDto,
   MediaAssetDto,
+  MenuDto,
+  MenuItemDto,
   PageDto,
   PageSchema,
   PageSummaryDto,
@@ -150,4 +152,34 @@ export const redirectsApi = {
     http.patch<ApiItem<RedirectDto>>(`${siteBase(ws, site)}/redirects/${id}`, input),
   remove: (ws: string, site: string, id: string) =>
     http.del<null>(`${siteBase(ws, site)}/redirects/${id}`),
+}
+
+export interface MenuItemInput {
+  label?: string
+  link_type?: string
+  target?: string | null
+  url?: string | null
+  parent?: string | null
+  position?: number
+}
+
+function menusBase(ws: string, site: string): string {
+  return `${siteBase(ws, site)}/menus`
+}
+
+export const menusApi = {
+  list: (ws: string, site: string) =>
+    http.get<ApiCollection<MenuDto>>(menusBase(ws, site)),
+  get: (ws: string, site: string, menu: string) =>
+    http.get<ApiItem<MenuDto>>(`${menusBase(ws, site)}/${menu}`),
+  create: (ws: string, site: string, input: { handle: string; name: string }) =>
+    http.post<ApiItem<MenuDto>>(menusBase(ws, site), input),
+  remove: (ws: string, site: string, menu: string) =>
+    http.del<null>(`${menusBase(ws, site)}/${menu}`),
+  addItem: (ws: string, site: string, menu: string, input: MenuItemInput) =>
+    http.post<ApiItem<MenuItemDto>>(`${menusBase(ws, site)}/${menu}/items`, input),
+  updateItem: (ws: string, site: string, menu: string, item: string, input: MenuItemInput) =>
+    http.patch<ApiItem<MenuItemDto>>(`${menusBase(ws, site)}/${menu}/items/${item}`, input),
+  removeItem: (ws: string, site: string, menu: string, item: string) =>
+    http.del<null>(`${menusBase(ws, site)}/${menu}/items/${item}`),
 }

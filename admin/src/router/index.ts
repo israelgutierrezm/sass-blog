@@ -76,6 +76,18 @@ export const router = createRouter({
       props: true,
     },
     {
+      path: '/w/:ws/s/:site/menus',
+      name: 'menus',
+      component: () => import('../views/MenusView.vue'),
+      props: true,
+    },
+    {
+      path: '/w/:ws/s/:site/menus/:menu',
+      name: 'menu-edit',
+      component: () => import('../views/MenuEditorView.vue'),
+      props: true,
+    },
+    {
       path: '/w/:ws/s/:site/c/:collection/categories',
       name: 'categories',
       component: () => import('../views/CategoriesView.vue'),

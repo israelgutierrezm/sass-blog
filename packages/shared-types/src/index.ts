@@ -154,6 +154,36 @@ export interface RedirectDto {
   updated_at?: string
 }
 
+/** Nodo del árbol de un menú (ADR-017). Referencia por `target` (ULID) o `url`. */
+export interface MenuNodeDto {
+  id: string
+  label: string
+  link_type: string
+  target: string | null
+  url: string | null
+  position: number
+  children: MenuNodeDto[]
+}
+
+export interface MenuDto {
+  id: string
+  handle: string
+  name: string
+  items?: MenuNodeDto[]
+  created_at?: string
+}
+
+/** Ítem plano (respuesta del CRUD de ítems). */
+export interface MenuItemDto {
+  id: string
+  label: string
+  link_type: string
+  target: string | null
+  url: string | null
+  parent?: string | null
+  position: number
+}
+
 /** Tarjeta resuelta para el CollectionGrid (sidecar `resolved`). */
 export interface EntryCard {
   id: string

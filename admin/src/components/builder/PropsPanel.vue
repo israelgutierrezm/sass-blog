@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { CategoryDto, CollectionDto } from '@sass-blog/shared-types'
+import type { CategoryDto, CollectionDto, MenuDto } from '@sass-blog/shared-types'
 import { type FieldDescriptor, getComponent } from '@sass-blog/site-schema'
 import { computed, onMounted, ref, watch } from 'vue'
-import { categoriesApi, collectionsApi } from '../../services/api'
+import { categoriesApi, collectionsApi, menusApi } from '../../services/api'
 import { useBuilderStore } from '../../stores/builder'
 import FieldControl from './FieldControl.vue'
 
@@ -14,15 +14,24 @@ const fields = computed(() => (component.value ? Object.entries(component.value.
 // Fuentes de opciones para los controles dynamic-select.
 const collections = ref<CollectionDto[]>([])
 const categories = ref<CategoryDto[]>([])
+const menus = ref<MenuDto[]>([])
 
 const collectionOptions = computed(() => collections.value.map((c) => ({ value: c.handle, label: c.name })))
 const categoryOptions = computed(() => categories.value.map((c) => ({ value: c.slug, label: c.name })))
+// El menú se referencia por handle (estable), como la colección.
+const menuOptions = computed(() => menus.value.map((m) => ({ value: m.handle, label: m.name })))
 
 function optionsFor(field: FieldDescriptor): { value: string; label: string }[] | undefined {
   if (field.control !== 'dynamic-select') {
     return undefined
   }
-  return field.optionsSource === 'categories' ? categoryOptions.value : collectionOptions.value
+  if (field.optionsSource === 'categories') {
+    return categoryOptions.value
+  }
+  if (field.optionsSource === 'menus') {
+    return menuOptions.value
+  }
+  return collectionOptions.value
 }
 
 async function loadCategories(handle: unknown): Promise<void> {
@@ -35,10 +44,24 @@ async function loadCategories(handle: unknown): Promise<void> {
 }
 
 onMounted(async () => {
-  if (builder.ws && builder.site) {
+  if (!builder.ws || !builder.site) {
+    return
+  }
+
+  // Menús: core (todos los planes).
+  try {
+    menus.value = (await menusApi.list(builder.ws, builder.site)).data
+  } catch {
+    menus.value = []
+  }
+
+  // Colecciones/categorías: sólo con plan que las incluya. Best-effort para no romper
+  // el panel (p.ej. una sección navigation en un plan sin cms.collections).
+  try {
     collections.value = (await collectionsApi.list(builder.ws, builder.site)).data
-    // Ya con las colecciones cargadas, resolver las categorías de la elegida.
     await loadCategories((section.value?.props as Record<string, unknown> | undefined)?.collection)
+  } catch {
+    collections.value = []
   }
 })
 
