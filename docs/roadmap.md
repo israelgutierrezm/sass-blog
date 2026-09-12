@@ -45,20 +45,22 @@ Vertical **verificado en navegador** (admin → publicar → renderer SSR con bi
 Playwright**. Incluye 13b: pantallas CRUD de taxonomía (autores/categorías) y el panel del
 CollectionGrid en el Builder (dynamic-select por API + control numérico).
 
-## Fase 4 — Media + Menus + SEO
+## Fase 4 — Media + Menus + SEO  ✅
 Media library (metadata + transformaciones por job), Menus jerárquicos, SEO de primera clase
 (sitemap, robots, redirects, slug history).
 
 **Diseño aprobado** (`docs/fase4-design.md`, ADRs 016–018). Tres sub-fases en orden
 **Media → SEO → Menús**. Decisiones: media por-sitio; campo `media` = URL + selector; menús como
 sección `navigation` (sidecar `resolved`). SEO servido dinámicamente (los archivos estáticos
-sitemap/robots quedan en Fase 5).
+sitemap/robots quedan en Fase 5). Suite E2E: 5 verticales (builder, content, media, seo, menus) verde.
 
 - **4A Media** ✅ — librería por-sitio, dedup por checksum, variantes por job, picker en el admin, E2E.
 - **4B SEO** ✅ — `seo` en el page schema, redirects (API manual + render 301 con anti-open-redirect
   y anti-bucle), slug-history por evento de kernel, sitemap.xml/robots.txt dinámicos, admin (panel
   SEO + gestión de redirects), E2E (slug→301 + sitemap).
-- **4C Menús** — pendiente: módulo `Navigation`, sección `navigation` con sidecar `resolved`.
+- **4C Menús** ✅ — módulo `Navigation` (menús+ítems jerárquicos), API + policies (`menu.manage`),
+  `MenuResolver` (contrato de kernel, paths en vivo), componente `navigation` + `Navigation.vue`
+  (canal `resolved`), admin (editor de menús + sección en el Builder), E2E (menú→sección→navegar).
 
 ## Fase 5 — Static Publishing
 Site → Publish Static → Generate → Export Artifact, reutilizando page schemas y
