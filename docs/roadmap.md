@@ -66,6 +66,12 @@ sitemap/robots quedan en Fase 5). Suite E2E: 5 verticales (builder, content, med
 Site → Publish Static → Generate → Export Artifact, reutilizando page schemas y
 `site-components`.
 
+**Diseño aprobado** (`docs/fase5-design.md`, ADR-019). Módulo `Publishing` + entidad
+`Deployment` (target static); build en job idempotente que reutiliza SitemapGenerator + el
+payload de `/render`; render estático por **CLI Node** (PageRenderer + renderToString, clean
+paths) → artefacto **self-contained** (HTML + CSS + media copiada + sitemap/robots) en ZIP
+descargable. Capability de plan `site.export` (Pro). En curso: **5.1 andamio Publishing**.
+
 ## Futuro (contemplado, no implementado)
 Dominios/SSL automáticos, analytics, multilenguaje completo, editorial avanzado, paywall,
 memberships, newsletter, marketplace, plugins, headless API, white-label / agency mode,
