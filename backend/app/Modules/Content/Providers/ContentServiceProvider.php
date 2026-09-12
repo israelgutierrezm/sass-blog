@@ -40,7 +40,9 @@ final class ContentServiceProvider extends ServiceProvider
         // Enlaza el contrato de kernel: Builder resuelve rutas dinámicas por esta
         // abstracción, sin depender de Content (degradación elegante si no se enlaza).
         $this->app->bind(DynamicRouteResolver::class, CollectionRouteResolver::class);
-        $this->app->bind(SectionDataResolver::class, CollectionGridResolver::class);
+
+        // Aporta su resolver de sección (collection-grid) al composite de kernel.
+        $this->app->tag([CollectionGridResolver::class], SectionDataResolver::TAG);
 
         // Aporta las entries publicadas enrutables al sitemap (contrato de kernel).
         $this->app->tag([EntrySitemapSource::class], SitemapUrlSource::TAG);

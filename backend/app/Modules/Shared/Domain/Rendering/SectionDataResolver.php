@@ -14,6 +14,13 @@ namespace App\Modules\Shared\Domain\Rendering;
  */
 interface SectionDataResolver
 {
+    /**
+     * Tag del contenedor bajo el que cada módulo registra su resolver de secciones.
+     * El composite de kernel los agrega y delega por `supports()`, así conviven varios
+     * (Content: collection-grid; Navigation: navigation) bajo un mismo contrato.
+     */
+    public const TAG = 'render.section_resolvers';
+
     public function supports(string $type): bool;
 
     /**
