@@ -12,6 +12,8 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   reporter: 'list',
+  // Construye el CLI de render estático (export) una vez antes de la suite.
+  globalSetup: './global-setup.ts',
 
   use: {
     baseURL: 'http://127.0.0.1:5173',
@@ -30,7 +32,8 @@ export default defineConfig({
       url: 'http://127.0.0.1:8000/up',
       timeout: 120_000,
       reuseExistingServer: false,
-      env: { DB_DATABASE: 'sass_blog_e2e' },
+      // QUEUE sync: el build estático corre inline al disparar el deployment.
+      env: { DB_DATABASE: 'sass_blog_e2e', QUEUE_CONNECTION: 'sync' },
     },
     {
       command: 'pnpm --filter admin dev',

@@ -62,7 +62,7 @@ sitemap/robots quedan en Fase 5). Suite E2E: 5 verticales (builder, content, med
   `MenuResolver` (contrato de kernel, paths en vivo), componente `navigation` + `Navigation.vue`
   (canal `resolved`), admin (editor de menús + sección en el Builder), E2E (menú→sección→navegar).
 
-## Fase 5 — Static Publishing
+## Fase 5 — Static Publishing  ✅
 Site → Publish Static → Generate → Export Artifact, reutilizando page schemas y
 `site-components`.
 
@@ -70,7 +70,8 @@ Site → Publish Static → Generate → Export Artifact, reutilizando page sche
 `Deployment` (target static); build en job idempotente que reutiliza SitemapGenerator + el
 payload de `/render`; render estático por **CLI Node** (PageRenderer + renderToString, clean
 paths) → artefacto **self-contained** (HTML + CSS + media copiada + sitemap/robots) en ZIP
-descargable. Capability de plan `site.export` (Pro). En curso: **5.1 andamio Publishing**.
+descargable. Capability de plan `site.export.static` (Pro). Suite E2E: 6 verticales verde
+(incl. export real: worker/sync → CLI Node → ZIP descargado).
 
 ## Futuro (contemplado, no implementado)
 Dominios/SSL automáticos, analytics, multilenguaje completo, editorial avanzado, paywall,
