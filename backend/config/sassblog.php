@@ -40,6 +40,7 @@ return [
         'Seo' => ['layer' => 'domain', 'label' => 'SEO',            'depends_on' => ['Sites']],
         'Navigation' => ['layer' => 'domain', 'label' => 'Navegación',     'depends_on' => ['Sites', 'Builder', 'Content']],
         'Publishing' => ['layer' => 'domain', 'label' => 'Publicación',     'depends_on' => ['Sites', 'Builder', 'Content', 'Seo']],
+        'Domains' => ['layer' => 'domain', 'label' => 'Dominios',       'depends_on' => ['Sites']],
     ],
 
     /*
@@ -95,6 +96,22 @@ return [
         'cli' => env('PUBLISHING_CLI', base_path('../renderer/static/dist/render-static.mjs')),
         'css' => env('PUBLISHING_CSS', base_path('../renderer/static/dist/render-static.css')),
         'timeout' => (int) env('PUBLISHING_TIMEOUT', 180),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Dominios propios (ADR-020)
+    |--------------------------------------------------------------------------
+    |
+    | Objetivos de apuntado hacia nuestro ingress: un dominio se verifica cuando su
+    | DNS resuelve al CNAME (subdominios) o a la IP (apex) del ingress. La verificación
+    | acepta cualquiera de estos valores.
+    |
+    */
+
+    'domains' => [
+        'ingress_cname' => env('DOMAINS_INGRESS_CNAME', 'ingress.sassblog.com'),
+        'ingress_ip' => env('DOMAINS_INGRESS_IP', ''),
     ],
 
 ];
