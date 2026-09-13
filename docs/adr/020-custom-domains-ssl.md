@@ -39,7 +39,8 @@ el TLS**. Van en ese orden.
   sabe pintar cualquier sitio; sólo cambia CÓMO se elige.
 
 - **TLS automático: `Caddy` con `on_demand_tls` + ASK-ENDPOINT.** Ante un SNI desconocido, Caddy
-  pregunta primero a `GET /internal/tls-check?domain=…` (público, sin auth, sólo-lectura, rápido),
+  pregunta primero a `GET /api/v1/public/domains/tls-check?domain=…` (sólo-lectura, rápido;
+  restringido a la red del edge en prod),
   que responde 200 **sólo si el `SiteDomain` está `active`**. Entonces Caddy obtiene un
   certificado **Let's Encrypt** on-demand (TLS-ALPN-01/HTTP-01, funciona porque el dominio ya
   apunta a nosotros), lo cachea y renueva solo. El gate en `active` es la pieza de seguridad:

@@ -37,8 +37,9 @@ ingress → `active`. Timeout ⇒ `failed`. Acción `recheck` re-encola la verif
 
 - `GET /api/v1/public/domains/resolve?host=blog.acme.com` → `{ site: <ulid> }` si hay un
   `SiteDomain` `active`; 404 si no. Lo consume el renderer para resolver el sitio por `Host`.
-- `GET /internal/tls-check?domain=blog.acme.com` → 200 sólo si `active`; 404/403 si no. Lo
-  consume Caddy (`on_demand_tls` "ask") antes de emitir cert. **Jamás** 200 para no verificados.
+- `GET /api/v1/public/domains/tls-check?domain=blog.acme.com` → 200 sólo si `active`; 404 si no.
+  Lo consume Caddy (`on_demand_tls` "ask") antes de emitir cert. **Jamás** 200 para no
+  verificados. En prod se **restringe a la red del edge** por infraestructura (firewall).
 
 Ambos exponen sólo el ulid del sitio (ya público); frontera de confianza como ADR-006.
 
