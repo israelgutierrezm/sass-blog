@@ -73,7 +73,18 @@ paths) → artefacto **self-contained** (HTML + CSS + media copiada + sitemap/ro
 descargable. Capability de plan `site.export.static` (Pro). Suite E2E: 6 verticales verde
 (incl. export real: worker/sync → CLI Node → ZIP descargado).
 
+## Fase 6 — Dominios propios + SSL
+Conectar un dominio propio (`blog.acme.com`) a un sitio, verificarlo por DNS y servirlo con
+HTTPS automático.
+
+**Diseño aprobado** (`docs/fase6-design.md`, ADR-020). Módulo `Domains` + entidad `SiteDomain`
+(hostname único global, estados verificación + `ssl_status`); verificación por **apuntado DNS**
+(CNAME/A hacia el ingress); enrutado del renderer **por `Host`** (endpoint `resolve`); TLS
+automático con **Caddy `on_demand_tls`** gateado por un **ask-endpoint** (`tls-check`, sólo
+dominios `active`). Capability `site.custom_domain` (Pro). Frontera: el cert real es infra
+(Caddy/staging); la máquina de estados + verificación (DNS mock) + enrutado se testean.
+
 ## Futuro (contemplado, no implementado)
-Dominios/SSL automáticos, analytics, multilenguaje completo, editorial avanzado, paywall,
-memberships, newsletter, marketplace, plugins, headless API, white-label / agency mode,
-billing real (Stripe/Mercado Pago vía adapters).
+Analytics, multilenguaje completo, editorial avanzado, paywall, memberships, newsletter,
+marketplace, plugins, headless API, white-label / agency mode, billing real (Stripe/Mercado
+Pago vía adapters).
