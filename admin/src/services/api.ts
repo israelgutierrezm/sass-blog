@@ -7,6 +7,7 @@ import type {
   EntryDto,
   EntrySummaryDto,
   DeploymentDto,
+  DomainDto,
   MediaAssetDto,
   MenuDto,
   MenuItemDto,
@@ -198,4 +199,21 @@ export const deploymentsApi = {
     http.post<ApiItem<DeploymentDto>>(deploymentsBase(ws, site)),
   downloadBlob: (ws: string, site: string, id: string) =>
     http.blob(`${deploymentsBase(ws, site)}/${id}/download`),
+}
+
+function domainsBase(ws: string, site: string): string {
+  return `${siteBase(ws, site)}/domains`
+}
+
+export const domainsApi = {
+  list: (ws: string, site: string) =>
+    http.get<ApiCollection<DomainDto>>(domainsBase(ws, site)),
+  create: (ws: string, site: string, hostname: string) =>
+    http.post<ApiItem<DomainDto>>(domainsBase(ws, site), { hostname }),
+  recheck: (ws: string, site: string, id: string) =>
+    http.post<ApiItem<DomainDto>>(`${domainsBase(ws, site)}/${id}/recheck`),
+  setPrimary: (ws: string, site: string, id: string) =>
+    http.post<ApiItem<DomainDto>>(`${domainsBase(ws, site)}/${id}/primary`),
+  remove: (ws: string, site: string, id: string) =>
+    http.del<null>(`${domainsBase(ws, site)}/${id}`),
 }

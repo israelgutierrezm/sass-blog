@@ -154,6 +154,18 @@ export interface RedirectDto {
   updated_at?: string
 }
 
+/** Dominio propio de un sitio (ADR-020). */
+export interface DomainDto {
+  id: string
+  hostname: string
+  status: string
+  ssl_status: string
+  is_primary: boolean
+  verified_at: string | null
+  verification: { cname: string; ip: string | null }
+  created_at?: string
+}
+
 /** Deployment / export estático de un sitio (ADR-019). */
 export interface DeploymentDto {
   id: string
