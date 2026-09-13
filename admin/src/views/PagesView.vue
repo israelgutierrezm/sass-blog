@@ -42,6 +42,13 @@ async function create(): Promise<void> {
       <h1 class="text-2xl font-semibold">Páginas</h1>
       <div class="flex items-center gap-4">
         <RouterLink
+          :to="{ name: 'deployments', params: { ws, site } }"
+          data-testid="nav-deployments"
+          class="text-sm text-blue-600 hover:underline"
+        >
+          Exportar
+        </RouterLink>
+        <RouterLink
           :to="{ name: 'menus', params: { ws, site } }"
           data-testid="nav-menus"
           class="text-sm text-blue-600 hover:underline"

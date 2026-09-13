@@ -80,10 +80,24 @@ async function upload<T>(path: string, form: FormData): Promise<T> {
   }))
 }
 
+/** Descarga autenticada: devuelve el Blob (el <a href> no envía el Bearer). */
+async function blob(path: string): Promise<Blob> {
+  const response = await fetch(`${BASE}${path}`, { headers: authHeaders() })
+  if (!response.ok) {
+    if (response.status === 401) {
+      setToken(null)
+    }
+    throw new ApiError(response.status, `HTTP ${response.status}`)
+  }
+
+  return response.blob()
+}
+
 export const http = {
   get: <T>(path: string) => request<T>('GET', path),
   post: <T>(path: string, body?: unknown) => request<T>('POST', path, body),
   patch: <T>(path: string, body?: unknown) => request<T>('PATCH', path, body),
   del: <T>(path: string) => request<T>('DELETE', path),
   upload: <T>(path: string, form: FormData) => upload<T>(path, form),
+  blob: (path: string) => blob(path),
 }

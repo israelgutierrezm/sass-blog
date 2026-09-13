@@ -6,6 +6,7 @@ import type {
   CollectionDto,
   EntryDto,
   EntrySummaryDto,
+  DeploymentDto,
   MediaAssetDto,
   MenuDto,
   MenuItemDto,
@@ -182,4 +183,19 @@ export const menusApi = {
     http.patch<ApiItem<MenuItemDto>>(`${menusBase(ws, site)}/${menu}/items/${item}`, input),
   removeItem: (ws: string, site: string, menu: string, item: string) =>
     http.del<null>(`${menusBase(ws, site)}/${menu}/items/${item}`),
+}
+
+function deploymentsBase(ws: string, site: string): string {
+  return `${siteBase(ws, site)}/deployments`
+}
+
+export const deploymentsApi = {
+  list: (ws: string, site: string) =>
+    http.get<ApiCollection<DeploymentDto>>(deploymentsBase(ws, site)),
+  get: (ws: string, site: string, id: string) =>
+    http.get<ApiItem<DeploymentDto>>(`${deploymentsBase(ws, site)}/${id}`),
+  create: (ws: string, site: string) =>
+    http.post<ApiItem<DeploymentDto>>(deploymentsBase(ws, site)),
+  downloadBlob: (ws: string, site: string, id: string) =>
+    http.blob(`${deploymentsBase(ws, site)}/${id}/download`),
 }

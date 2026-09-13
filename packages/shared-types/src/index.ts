@@ -154,6 +154,18 @@ export interface RedirectDto {
   updated_at?: string
 }
 
+/** Deployment / export estático de un sitio (ADR-019). */
+export interface DeploymentDto {
+  id: string
+  target: string
+  status: string
+  has_artifact: boolean
+  bytes: number | null
+  error: string | null
+  created_at?: string
+  updated_at?: string
+}
+
 /** Nodo del árbol de un menú (ADR-017). Referencia por `target` (ULID) o `url`. */
 export interface MenuNodeDto {
   id: string
