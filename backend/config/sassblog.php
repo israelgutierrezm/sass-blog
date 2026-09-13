@@ -79,4 +79,22 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Publishing / export estático (ADR-019)
+    |--------------------------------------------------------------------------
+    |
+    | Disco donde se guardan los artefactos ZIP; binario de Node y rutas del CLI de
+    | render estático (bundle + CSS extraído) que produce el build de site-schema.
+    |
+    */
+
+    'publishing' => [
+        'disk' => env('PUBLISHING_DISK', 'local'),
+        'node' => env('NODE_BIN', 'node'),
+        'cli' => env('PUBLISHING_CLI', base_path('../renderer/static/dist/render-static.mjs')),
+        'css' => env('PUBLISHING_CSS', base_path('../renderer/static/dist/render-static.css')),
+        'timeout' => (int) env('PUBLISHING_TIMEOUT', 180),
+    ],
+
 ];

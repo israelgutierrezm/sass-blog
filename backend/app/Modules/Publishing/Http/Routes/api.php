@@ -17,4 +17,5 @@ Route::middleware(['auth:sanctum', 'workspace', 'capability:site.export.static']
         Route::get('deployments', [DeploymentController::class, 'index'])->name('index');
         Route::post('deployments', [DeploymentController::class, 'store'])->name('store');
         Route::get('deployments/{deployment}', [DeploymentController::class, 'show'])->name('show');
+        Route::get('deployments/{deployment}/download', [DeploymentController::class, 'download'])->name('download');
     });

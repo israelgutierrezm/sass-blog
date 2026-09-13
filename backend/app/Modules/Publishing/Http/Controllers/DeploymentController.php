@@ -14,6 +14,8 @@ use App\Modules\Tenancy\Infrastructure\Models\Workspace;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * API de deployments (export estático), bajo /workspaces/{ws}/sites/{site}/deployments.
@@ -37,10 +39,25 @@ final class DeploymentController extends Controller
         $this->authorize('create', Deployment::class);
         $siteModel = $this->resolveSite($site);
 
+        $hash = app(SitePublishedState::class)->hash($siteModel->id);
+
+        // Idempotencia (ADR-019): si el estado publicado no cambió y ya hay un artefacto
+        // exitoso, se devuelve ese en vez de reconstruir.
+        $existing = Deployment::forSite($siteModel->id)
+            ->where('published_hash', $hash)
+            ->where('status', Deployment::STATUS_SUCCESS)
+            ->whereNotNull('artifact_ref')
+            ->latest()
+            ->first();
+
+        if ($existing !== null) {
+            return (new DeploymentResource($existing))->response()->setStatusCode(200);
+        }
+
         $deployment = new Deployment;
         $deployment->site_id = $siteModel->id;
         $deployment->target = Deployment::TARGET_STATIC;
-        $deployment->published_hash = app(SitePublishedState::class)->hash($siteModel->id);
+        $deployment->published_hash = $hash;
         $deployment->triggered_by = Auth::id();
         $deployment->save();
 
@@ -57,6 +74,22 @@ final class DeploymentController extends Controller
         $this->authorize('view', $deploymentModel);
 
         return new DeploymentResource($deploymentModel);
+    }
+
+    public function download(Workspace $workspace, string $site, string $deployment): StreamedResponse
+    {
+        $siteModel = $this->resolveSite($site);
+        $deploymentModel = $this->resolveDeployment($siteModel, $deployment);
+        $this->authorize('view', $deploymentModel);
+
+        $disk = (string) config('sassblog.publishing.disk', 'local');
+        abort_if(
+            $deploymentModel->artifact_ref === null || ! Storage::disk($disk)->exists($deploymentModel->artifact_ref),
+            404,
+            'Artefacto no disponible.',
+        );
+
+        return Storage::disk($disk)->download($deploymentModel->artifact_ref, "site-{$siteModel->ulid}.zip");
     }
 
     private function resolveSite(string $ulid): Site

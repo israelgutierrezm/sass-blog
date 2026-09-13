@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Seo\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Seo\Application\SitemapDocument;
 use App\Modules\Seo\Application\SitemapGenerator;
-use App\Modules\Shared\Domain\Rendering\SitemapUrl;
 use App\Modules\Shared\Domain\Tenancy\WorkspaceContext;
 use App\Modules\Sites\Infrastructure\Models\Site;
 use Illuminate\Http\Request;
@@ -30,7 +30,7 @@ final class SitemapController extends Controller
             fn (): array => app(SitemapGenerator::class)->forSite($siteModel->id),
         );
 
-        return response($this->renderXml($urls, $baseUrl), 200)
+        return response(SitemapDocument::xml($urls, $baseUrl), 200)
             ->header('Content-Type', 'application/xml; charset=UTF-8')
             ->header('Cache-Control', 'public, max-age=3600');
     }
@@ -40,9 +40,7 @@ final class SitemapController extends Controller
         $siteModel = $this->resolveSite($site);
         $baseUrl = $this->baseUrl($request, $siteModel);
 
-        $body = "User-agent: *\nAllow: /\n\nSitemap: {$baseUrl}/sitemap.xml\n";
-
-        return response($body, 200)
+        return response(SitemapDocument::robots($baseUrl), 200)
             ->header('Content-Type', 'text/plain; charset=UTF-8')
             ->header('Cache-Control', 'public, max-age=3600');
     }
@@ -69,25 +67,5 @@ final class SitemapController extends Controller
         }
 
         return rtrim($request->getSchemeAndHttpHost(), '/');
-    }
-
-    /**
-     * @param  list<SitemapUrl>  $urls
-     */
-    private function renderXml(array $urls, string $baseUrl): string
-    {
-        $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
-        $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";
-
-        foreach ($urls as $url) {
-            $loc = htmlspecialchars($baseUrl.$url->path, ENT_XML1 | ENT_QUOTES, 'UTF-8');
-            $xml .= '  <url><loc>'.$loc.'</loc>';
-            if ($url->lastmod !== null) {
-                $xml .= '<lastmod>'.$url->lastmod->format('Y-m-d').'</lastmod>';
-            }
-            $xml .= '</url>'."\n";
-        }
-
-        return $xml.'</urlset>'."\n";
     }
 }

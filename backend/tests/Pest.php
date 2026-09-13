@@ -183,6 +183,11 @@ function menusUrl(string $wsUlid, string $siteUlid): string
     return "/api/v1/workspaces/{$wsUlid}/sites/{$siteUlid}/menus";
 }
 
+function deploymentsUrl(string $wsUlid, string $siteUlid): string
+{
+    return "/api/v1/workspaces/{$wsUlid}/sites/{$siteUlid}/deployments";
+}
+
 /**
  * Page schema válido con una sección hero. `settings` NO vacío a propósito: PHP no
  * distingue {} de [], así que un settings vacío se serializaría como [] y opis lo

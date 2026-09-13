@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
+use App\Modules\Publishing\Application\StaticRenderer;
 use App\Modules\Sites\Application\CreateSite;
 use Database\Seeders\DatabaseSeeder;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
+use Tests\Support\FakeStaticRenderer;
 
 beforeEach(function (): void {
     $this->seed(DatabaseSeeder::class);
+    Storage::fake('local'); // el ZIP del build va a un disco fake
+    app()->bind(StaticRenderer::class, FakeStaticRenderer::class); // sin Node en tests
 });
-
-function deploymentsUrl(string $wsUlid, string $siteUlid): string
-{
-    return "/api/v1/workspaces/{$wsUlid}/sites/{$siteUlid}/deployments";
-}
 
 it('el owner Pro dispara un deployment y el build (cola sync) lo completa', function () {
     ['user' => $user, 'ws' => $ws, 'site' => $site] = cmsOwnerContext();
