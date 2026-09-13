@@ -40,14 +40,29 @@ const route = useRoute()
 const config = useRuntimeConfig()
 
 const segments = ([] as string[]).concat((route.params.slug as string[] | string | undefined) ?? [])
-const { siteId, path } = resolveSite(segments, config.public.reservedPrefix)
-
-if (!siteId) {
-  throw createError({ statusCode: 404, statusMessage: 'Sitio no encontrado' })
-}
 
 // SSR usa la base interna (server -> API); el cliente, la pública.
 const base = import.meta.server ? config.apiInternalBase : config.public.apiBase
+
+// Host actual: SSR desde el header; cliente desde location.
+const host = (import.meta.server ? useRequestHeaders(['host']).host : window.location.host) ?? ''
+
+// Resolución del sitio: por Host (dominio propio, ADR-020) o por prefijo _site/{ulid}.
+// Dominio propio → rutas limpias en la raíz (linkBase ''); prefijo → linkBase /_site/{id}.
+const { data: resolution } = await useAsyncData(`site:${host}:${segments.join('/')}`, async () => {
+  if (isCustomHost(host, config.public.appHosts)) {
+    const r = await $fetch<{ data: { site: string } }>(`${base}/public/domains/resolve`, { query: { host } }).catch(() => null)
+    return r ? { siteId: r.data.site, path: pathFromSegments(segments), linkBase: '' } : null
+  }
+  const s = resolveSite(segments, config.public.reservedPrefix)
+  return s.siteId ? { siteId: s.siteId, path: s.path, linkBase: `/${config.public.reservedPrefix}/${s.siteId}` } : null
+})
+
+if (!resolution.value) {
+  throw createError({ statusCode: 404, statusMessage: 'Sitio no encontrado' })
+}
+
+const { siteId, path, linkBase } = resolution.value
 
 const { data, error } = await useAsyncData(`render:${siteId}:${path}`, () =>
   $fetch<{ data: RenderResponse }>(`${base}/public/sites/${siteId}/render`, { query: { path } }),
@@ -59,9 +74,6 @@ if (error.value || !data.value) {
 }
 
 const payload = data.value.data
-
-// Prefijo de sitio para los enlaces de los grids: /_site/{ulid} + card.path.
-const linkBase = `/${config.public.reservedPrefix}/${siteId}`
 
 // Redirect (ADR-018): el backend lo resolvió ANTES del 404; Nuxt emite el 301/302
 // real hacia el destino dentro del mismo sitio. En SSR corta la respuesta aquí.

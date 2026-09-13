@@ -21,6 +21,9 @@ export default defineNuxtConfig({
       apiBase: 'http://127.0.0.1:8000/api/v1',
       // Prefijo de ruta reservado para resolver el sitio en dev (ADR-006).
       reservedPrefix: '_site',
+      // Hosts propios de la plataforma; cualquier otro Host se trata como dominio de
+      // tenant y se resuelve por Host (ADR-020). Override con NUXT_PUBLIC_APP_HOSTS (CSV).
+      appHosts: ['localhost:3000', '127.0.0.1:3000'],
     },
   },
 })

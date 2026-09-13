@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { resolveSite } from '../app/utils/resolveSite'
+import { isCustomHost, pathFromSegments, resolveSite } from '../app/utils/resolveSite'
 
 describe('resolveSite', () => {
   it('resuelve el sitio y el home (path /)', () => {
@@ -25,5 +25,31 @@ describe('resolveSite', () => {
     const segments = `${linkBase}${cardPath}`.split('/').filter((s) => s.length > 0)
 
     expect(resolveSite(segments, '_site')).toEqual({ siteId, path: cardPath })
+  })
+})
+
+describe('isCustomHost', () => {
+  const appHosts = ['localhost:3000', '127.0.0.1:3000']
+
+  it('un dominio de tenant es host propio', () => {
+    expect(isCustomHost('blog.acme.com', appHosts)).toBe(true)
+    expect(isCustomHost('BLOG.ACME.COM', appHosts)).toBe(true) // case-insensitive
+  })
+
+  it('el host de la app NO es dominio propio', () => {
+    expect(isCustomHost('localhost:3000', appHosts)).toBe(false)
+    expect(isCustomHost('127.0.0.1:3000', appHosts)).toBe(false)
+  })
+
+  it('host vacío no es dominio propio (fallback a prefijo)', () => {
+    expect(isCustomHost('', appHosts)).toBe(false)
+  })
+})
+
+describe('pathFromSegments', () => {
+  it('mapea los segmentos a la ruta del sitio en la raíz', () => {
+    expect(pathFromSegments([])).toBe('/')
+    expect(pathFromSegments(['acerca'])).toBe('/acerca')
+    expect(pathFromSegments(['blog', 'mi-post'])).toBe('/blog/mi-post')
   })
 })

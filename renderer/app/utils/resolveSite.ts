@@ -21,3 +21,27 @@ export function resolveSite(segments: string[], prefix: string): ResolvedSite {
     path: rest.length > 0 ? `/${rest.join('/')}` : '/',
   }
 }
+
+/**
+ * ¿El Host es un dominio PROPIO de un tenant (no el de la app/preview)? Si lo es, el sitio
+ * se resuelve por Host (ADR-020) y las páginas se sirven a la raíz; si no, se usa el prefijo
+ * `_site/{ulid}`. Función PURA.
+ */
+export function isCustomHost(host: string, appHosts: string[]): boolean {
+  const h = host.toLowerCase()
+  if (h === '') {
+    return false
+  }
+
+  return !appHosts.map((a) => a.toLowerCase()).includes(h)
+}
+
+/**
+ * Path público desde los segmentos de la ruta catch-all (modo dominio propio: TODA la ruta
+ * es del sitio, sin prefijo). `[]` → `/`, `['a','b']` → `/a/b`. Función PURA.
+ */
+export function pathFromSegments(segments: string[]): string {
+  const rest = segments.filter((segment) => segment.length > 0)
+
+  return rest.length > 0 ? `/${rest.join('/')}` : '/'
+}
