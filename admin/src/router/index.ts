@@ -106,6 +106,12 @@ export const router = createRouter({
       props: true,
     },
     {
+      path: '/w/:ws/s/:site/newsletter',
+      name: 'newsletter',
+      component: () => import('../views/NewsletterView.vue'),
+      props: true,
+    },
+    {
       path: '/w/:ws/s/:site/c/:collection/categories',
       name: 'categories',
       component: () => import('../views/CategoriesView.vue'),

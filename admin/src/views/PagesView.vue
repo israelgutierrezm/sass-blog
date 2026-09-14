@@ -49,6 +49,13 @@ async function create(): Promise<void> {
           Analítica
         </RouterLink>
         <RouterLink
+          :to="{ name: 'newsletter', params: { ws, site } }"
+          data-testid="nav-newsletter"
+          class="text-sm text-blue-600 hover:underline"
+        >
+          Newsletter
+        </RouterLink>
+        <RouterLink
           :to="{ name: 'domains', params: { ws, site } }"
           data-testid="nav-domains"
           class="text-sm text-blue-600 hover:underline"

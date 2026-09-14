@@ -3,6 +3,7 @@ import type {
   ApiCollection,
   ApiItem,
   AuthorDto,
+  CampaignDto,
   CategoryDto,
   CollectionDto,
   EntryDto,
@@ -17,6 +18,7 @@ import type {
   PageSummaryDto,
   RedirectDto,
   SiteDto,
+  SubscriberDto,
   WorkspaceDto,
 } from '@sass-blog/shared-types'
 import { http } from './http'
@@ -227,6 +229,21 @@ export const analyticsApi = {
     http.get<ApiItem<AnalyticsSummaryDto>>(`${analyticsBase(ws, site)}/summary${rangeQuery(params)}`),
   exportBlob: (ws: string, site: string, params?: { from?: string; to?: string }) =>
     http.blob(`${analyticsBase(ws, site)}/export${rangeQuery(params)}`),
+}
+
+function newsletterBase(ws: string, site: string): string {
+  return `${siteBase(ws, site)}/newsletter`
+}
+
+export const newsletterApi = {
+  subscribers: (ws: string, site: string) =>
+    http.get<ApiCollection<SubscriberDto>>(`${newsletterBase(ws, site)}/subscribers`),
+  campaigns: (ws: string, site: string) =>
+    http.get<ApiCollection<CampaignDto>>(`${newsletterBase(ws, site)}/campaigns`),
+  createCampaign: (ws: string, site: string, input: { subject: string; body: string }) =>
+    http.post<ApiItem<CampaignDto>>(`${newsletterBase(ws, site)}/campaigns`, input),
+  sendCampaign: (ws: string, site: string, id: string) =>
+    http.post<ApiItem<CampaignDto>>(`${newsletterBase(ws, site)}/campaigns/${id}/send`),
 }
 
 export const domainsApi = {

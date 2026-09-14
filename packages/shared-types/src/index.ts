@@ -244,4 +244,24 @@ export interface AnalyticsSummaryDto {
   top_referrers: AnalyticsReferrerDto[] | null
 }
 
+/** Newsletter (ADR-022). */
+export interface SubscriberDto {
+  id: string
+  email: string
+  status: string
+  confirmed_at: string | null
+  created_at?: string
+}
+export interface CampaignDto {
+  id: string
+  subject: string
+  body: string
+  status: string
+  recipients_count: number
+  sent_count: number
+  failed_count: number
+  sent_at: string | null
+  created_at?: string
+}
+
 export type { PageSchema, PageSeo } from '@sass-blog/site-schema'
