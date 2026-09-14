@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace App\Modules\Content\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Content\Application\EntryWorkflow;
 use App\Modules\Content\Application\PublishEntry;
 use App\Modules\Content\Application\SlugGenerator;
 use App\Modules\Content\Application\Validation\EntryDataValidator;
+use App\Modules\Content\Http\Requests\ApproveEntryRequest;
+use App\Modules\Content\Http\Requests\RequestChangesRequest;
 use App\Modules\Content\Http\Requests\StoreEntryRequest;
 use App\Modules\Content\Http\Requests\UpdateEntryRequest;
 use App\Modules\Content\Http\Resources\EntryResource;
@@ -130,6 +133,63 @@ final class EntryController extends Controller
         $published = app(PublishEntry::class)->handle($entryModel, Auth::id());
 
         return new EntryResource($published->load(['author', 'categories', 'collection']));
+    }
+
+    /** Flujo editorial (ADR-023). Enviar a revisión: redactor (`entry.update`). */
+    public function submitReview(Workspace $workspace, string $site, string $collection, string $entry): EntryResource
+    {
+        $entryModel = $this->workflowEntry($site, $collection, $entry, 'update');
+
+        return $this->workflowResult(app(EntryWorkflow::class)->submitForReview($entryModel, Auth::id()));
+    }
+
+    /** Retirar de revisión: redactor (`entry.update`). */
+    public function withdrawReview(Workspace $workspace, string $site, string $collection, string $entry): EntryResource
+    {
+        $entryModel = $this->workflowEntry($site, $collection, $entry, 'update');
+
+        return $this->workflowResult(app(EntryWorkflow::class)->withdraw($entryModel, Auth::id()));
+    }
+
+    /** Aprobar (publicar ya o programar): editor (`entry.publish`). */
+    public function approve(Workspace $workspace, string $site, string $collection, string $entry, ApproveEntryRequest $request): EntryResource
+    {
+        $siteModel = $this->resolveSite($site);
+        $collectionModel = $this->resolveCollection($siteModel, $collection);
+        $entryModel = $this->resolveEntry($collectionModel, $entry);
+        $this->authorize('publish', $entryModel);
+
+        // Aprobar lleva el contenido en vivo (ya o programado): revalidar perfil PUBLISH.
+        $errors = app(EntryDataValidator::class)->validate($collectionModel->fields, $entryModel->data, 'publish');
+        if ($errors !== []) {
+            throw ValidationException::withMessages(['values' => ['No se puede aprobar: '.$errors[0]['message']]]);
+        }
+
+        return $this->workflowResult(app(EntryWorkflow::class)->approve($entryModel, $request->date('publish_at'), Auth::id()));
+    }
+
+    /** Pedir cambios: editor (`entry.publish`). Devuelve a borrador con nota. */
+    public function requestChanges(Workspace $workspace, string $site, string $collection, string $entry, RequestChangesRequest $request): EntryResource
+    {
+        $entryModel = $this->workflowEntry($site, $collection, $entry, 'publish');
+
+        return $this->workflowResult(app(EntryWorkflow::class)->requestChanges($entryModel, $request->string('note')->toString(), Auth::id()));
+    }
+
+    /** Resuelve site→colección→entry y autoriza la habilidad dada. */
+    private function workflowEntry(string $site, string $collection, string $entry, string $ability): Entry
+    {
+        $siteModel = $this->resolveSite($site);
+        $collectionModel = $this->resolveCollection($siteModel, $collection);
+        $entryModel = $this->resolveEntry($collectionModel, $entry);
+        $this->authorize($ability, $entryModel);
+
+        return $entryModel;
+    }
+
+    private function workflowResult(Entry $entry): EntryResource
+    {
+        return new EntryResource($entry->load(['author', 'categories', 'collection']));
     }
 
     private function resolveSlug(StoreEntryRequest $request, Collection $collection): string

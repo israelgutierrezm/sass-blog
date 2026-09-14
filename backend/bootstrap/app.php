@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Content\Domain\Exceptions\InvalidEntryTransitionException;
 use App\Modules\Shared\Domain\Capabilities\Exceptions\CapabilityDeniedException;
 use App\Modules\Shared\Http\Middleware\EnsureCapability;
 use App\Modules\Shared\Http\Middleware\ResolveWorkspace;
@@ -32,6 +33,15 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (CapabilityDeniedException $e, Request $request) {
             if ($request->is('api/*') || $request->expectsJson()) {
                 return response()->json(['message' => $e->getMessage()], 403);
+            }
+
+            return null;
+        });
+
+        // Transición editorial inválida -> 422 (no 500). ADR-023.
+        $exceptions->render(function (InvalidEntryTransitionException $e, Request $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return response()->json(['message' => $e->getMessage()], 422);
             }
 
             return null;

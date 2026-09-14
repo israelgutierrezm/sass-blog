@@ -30,6 +30,16 @@ Route::middleware(['auth:sanctum', 'workspace', 'capability:cms.collections'])
         Route::patch('collections/{collection}/entries/{entry}', [EntryController::class, 'update'])->name('entries.update');
         Route::post('collections/{collection}/entries/{entry}/publish', [EntryController::class, 'publish'])->name('entries.publish');
 
+        // Flujo editorial avanzado (ADR-023): gated por capability:publisher.editorial (Pro).
+        // La Policy diferencia redactor (submit/withdraw ⇐ entry.update) de editor
+        // (approve/request-changes ⇐ entry.publish).
+        Route::middleware('capability:publisher.editorial')->group(function (): void {
+            Route::post('collections/{collection}/entries/{entry}/submit-review', [EntryController::class, 'submitReview'])->name('entries.submit-review');
+            Route::post('collections/{collection}/entries/{entry}/withdraw-review', [EntryController::class, 'withdrawReview'])->name('entries.withdraw-review');
+            Route::post('collections/{collection}/entries/{entry}/approve', [EntryController::class, 'approve'])->name('entries.approve');
+            Route::post('collections/{collection}/entries/{entry}/request-changes', [EntryController::class, 'requestChanges'])->name('entries.request-changes');
+        });
+
         // Autores (nivel site).
         Route::get('authors', [AuthorController::class, 'index'])->name('authors.index');
         Route::post('authors', [AuthorController::class, 'store'])->name('authors.store');

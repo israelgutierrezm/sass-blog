@@ -28,6 +28,7 @@ final class EntryResource extends JsonResource
             'title' => $this->title,
             'slug' => $this->slug,
             'status' => $this->status,
+            'editorial_note' => $this->editorial_note,
             'path' => $this->publicPath(),
             'values' => $this->data,
             'author' => $this->whenLoaded('author', fn () => $this->author === null ? null : [
