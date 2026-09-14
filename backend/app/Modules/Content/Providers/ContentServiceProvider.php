@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Content\Providers;
 
+use App\Modules\Content\Console\PublishScheduledEntriesCommand;
 use App\Modules\Content\Events\EntryPublished;
 use App\Modules\Content\Infrastructure\Models\Author;
 use App\Modules\Content\Infrastructure\Models\Category;
@@ -23,6 +24,7 @@ use App\Modules\Shared\Domain\Rendering\DynamicRouteResolver;
 use App\Modules\Shared\Domain\Rendering\SectionDataResolver;
 use App\Modules\Shared\Domain\Rendering\SitemapUrlSource;
 use App\Modules\Sites\Events\SiteCreated;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -61,5 +63,15 @@ final class ContentServiceProvider extends ServiceProvider
         Gate::policy(Category::class, CategoryPolicy::class);
         Gate::policy(Collection::class, CollectionPolicy::class);
         Gate::policy(Entry::class, EntryPolicy::class);
+
+        // Publicación programada (ADR-023): comando + barrido cada minuto (requiere
+        // `schedule:run` por cron, como el resto de programados).
+        if ($this->app->runningInConsole()) {
+            $this->commands([PublishScheduledEntriesCommand::class]);
+        }
+
+        $this->callAfterResolving(Schedule::class, function (Schedule $schedule): void {
+            $schedule->command('content:publish-scheduled')->everyMinute();
+        });
     }
 }
