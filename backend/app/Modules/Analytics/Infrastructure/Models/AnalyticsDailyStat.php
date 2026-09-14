@@ -30,6 +30,14 @@ final class AnalyticsDailyStat extends Model
     use HasFactory;
     use ScopedToSite;
 
+    /**
+     * `path` reservado para el TOTAL del sitio (no una ruta real: las rutas empiezan por `/`).
+     * El rollup escribe una fila con este path por sitio/día con las visitas y visitantes
+     * únicos de TODO el sitio — así los únicos a nivel de sitio no se sobrecuentan sumando
+     * los únicos por ruta (un visitante de 3 páginas es 1 visitante del sitio, no 3).
+     */
+    public const SITE_TOTAL = '*';
+
     protected $fillable = [
         'site_id',
         'stat_date',
