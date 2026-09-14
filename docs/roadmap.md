@@ -109,7 +109,20 @@ API+gating por plan, captura server-side en el renderer, dashboard admin, E2E). 
 verticales verde** (incl. publicar → visitar → rollup → el dashboard muestra la visita). Backend
 288 tests verde.
 
+## Fase 8 — Newsletter
+Capturar suscriptores desde el sitio publicado (formulario + doble opt-in) y enviarles campañas
+de correo, con baja fácil.
+
+**Diseño aprobado** (`docs/fase8-design.md`, ADR-022). Módulo `Newsletter` + entidades
+`newsletter_subscribers` (estados pending/confirmed/unsubscribed, unique por `site/email`),
+`newsletter_campaigns` y `newsletter_campaign_sends` (unique por `campaña/suscriptor` →
+idempotencia del envío). **Doble opt-in** (confirmación por correo, baja por token). Envío por
+job `SendCampaign` idempotente y por lotes vía **Laravel Mail** (abstracción sin lock-in;
+dev/E2E `array`/`log` + `Mail::fake`, prod por config). Captura **en el sitio** con un componente
+`newsletter` (site-schema + site-components + renderer). Permiso `newsletter.manage`
+(owner/admin/editor); captura para todos y `newsletter.send` (Pro) para ENVIAR. Deuda MVP: sin
+tracking de aperturas/clics; una lista por sitio; sin envío real en dev.
+
 ## Futuro (contemplado, no implementado)
-Multilenguaje completo, editorial avanzado, paywall, memberships, newsletter, marketplace,
-plugins, headless API, white-label / agency mode, billing real (Stripe/Mercado Pago vía
-adapters).
+Multilenguaje completo, editorial avanzado, paywall, memberships, marketplace, plugins, headless
+API, white-label / agency mode, billing real (Stripe/Mercado Pago vía adapters).
