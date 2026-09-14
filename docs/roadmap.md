@@ -128,7 +128,7 @@ API admin+gating, admin, componente en el sitio, E2E). Suite E2E: **9 verticales
 publicar página con newsletter → suscribirse en el sitio → aparece en el admin). Backend 312
 tests verde.
 
-## Fase 9 — Editorial avanzado
+## Fase 9 — Editorial avanzado  ✅
 Flujo editorial para las entradas: revisión (borrador → en revisión → aprobar/pedir cambios) y
 publicación programada a fecha futura. Caso periódico/revista.
 
@@ -140,6 +140,10 @@ en el dominio. Publicación programada por job `PublishScheduledEntries` (schedu
 pasa `scheduled → published` al vencer y emite `EntryPublished`. Capability `publisher.editorial`
 (Pro) gatea el flujo avanzado; la publicación directa sigue para todos. Deuda MVP: sin historial
 de revisiones ni asignación de revisores; una nota de feedback; sin previsualización aparte.
+
+Implementado en 5 sub-slices (estados+máquina de transiciones, API+gating, job de programación,
+admin, E2E). Suite E2E: **10 verticales verde** (incl. enviar a revisión → aprobar → publicado →
+visible; y programar → scheduled). Backend 325 tests verde.
 
 ## Futuro (contemplado, no implementado)
 Multilenguaje completo, paywall, memberships, marketplace, plugins, headless API,

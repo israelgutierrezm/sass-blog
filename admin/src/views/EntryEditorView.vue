@@ -217,7 +217,7 @@ function toggleCategory(id: string, checked: boolean): void {
         Cambios solicitados: {{ editorialNote }}
       </p>
 
-      <div v-if="entryId" class="rounded-md border border-gray-200 p-3">
+      <div class="rounded-md border border-gray-200 p-3">
         <p class="mb-2 text-xs font-medium uppercase text-gray-400">Flujo editorial</p>
 
         <button
