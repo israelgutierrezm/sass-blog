@@ -220,4 +220,28 @@ export interface EntryCard {
   category: { name: string; slug: string } | null
 }
 
+/** Analítica de un sitio (ADR-021). `top_referrers` es null sin plan Pro. */
+export interface AnalyticsPointDto {
+  date: string
+  views: number
+  visitors: number
+}
+export interface AnalyticsPageDto {
+  path: string
+  views: number
+  visitors: number
+}
+export interface AnalyticsReferrerDto {
+  referrer: string
+  views: number
+}
+export interface AnalyticsSummaryDto {
+  range: { from: string; to: string }
+  advanced: boolean
+  totals: { views: number; visitors: number }
+  series: AnalyticsPointDto[]
+  top_pages: AnalyticsPageDto[]
+  top_referrers: AnalyticsReferrerDto[] | null
+}
+
 export type { PageSchema, PageSeo } from '@sass-blog/site-schema'

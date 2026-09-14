@@ -100,6 +100,12 @@ export const router = createRouter({
       props: true,
     },
     {
+      path: '/w/:ws/s/:site/analytics',
+      name: 'analytics',
+      component: () => import('../views/AnalyticsView.vue'),
+      props: true,
+    },
+    {
       path: '/w/:ws/s/:site/c/:collection/categories',
       name: 'categories',
       component: () => import('../views/CategoriesView.vue'),

@@ -1,4 +1,5 @@
 import type {
+  AnalyticsSummaryDto,
   ApiCollection,
   ApiItem,
   AuthorDto,
@@ -203,6 +204,29 @@ export const deploymentsApi = {
 
 function domainsBase(ws: string, site: string): string {
   return `${siteBase(ws, site)}/domains`
+}
+
+function analyticsBase(ws: string, site: string): string {
+  return `${siteBase(ws, site)}/analytics`
+}
+
+function rangeQuery(params?: { from?: string; to?: string }): string {
+  const q = new URLSearchParams()
+  if (params?.from) {
+    q.set('from', params.from)
+  }
+  if (params?.to) {
+    q.set('to', params.to)
+  }
+  const qs = q.toString()
+  return qs ? `?${qs}` : ''
+}
+
+export const analyticsApi = {
+  summary: (ws: string, site: string, params?: { from?: string; to?: string }) =>
+    http.get<ApiItem<AnalyticsSummaryDto>>(`${analyticsBase(ws, site)}/summary${rangeQuery(params)}`),
+  exportBlob: (ws: string, site: string, params?: { from?: string; to?: string }) =>
+    http.blob(`${analyticsBase(ws, site)}/export${rangeQuery(params)}`),
 }
 
 export const domainsApi = {
