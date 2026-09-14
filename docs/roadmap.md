@@ -145,7 +145,7 @@ Implementado en 5 sub-slices (estados+máquina de transiciones, API+gating, job 
 admin, E2E). Suite E2E: **10 verticales verde** (incl. enviar a revisión → aprobar → publicado →
 visible; y programar → scheduled). Backend 325 tests verde.
 
-## Fase 10 — Portadas / Frontpage
+## Fase 10 — Portadas / Frontpage  ✅
 Curar una portada tipo periódico: elegir y ordenar a mano artículos destacados en un bloque, en
 cualquier página. Complementa el CollectionGrid (automático) con selección manual.
 
@@ -156,6 +156,10 @@ memoria, anti-N+1; sólo publicados). Curación **drag-and-drop** en el Builder 
 `entry-picker`, HTML5 nativo). Gating `publisher.frontpages` (Pro) validado **al guardar** el
 schema (server-side). Deuda MVP: layout fijo por variante; una colección por bloque; sin
 previsualización en vivo.
+
+Implementado en 4 sub-slices (componente+resolver+gating, Featured.vue, admin entry-picker
+drag-and-drop, E2E). Suite E2E: **11 verticales verde** (incl. curar portada → artículos en orden
+en el sitio). Backend 334 tests verde.
 
 ## Futuro (contemplado, no implementado)
 Multilenguaje completo, paywall, memberships, marketplace, plugins, headless API,
