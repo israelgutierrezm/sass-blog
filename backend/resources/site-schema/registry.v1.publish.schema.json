@@ -475,6 +475,76 @@
                   "settings"
                 ],
                 "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "featured"
+                  },
+                  "variant": {
+                    "type": "string",
+                    "enum": [
+                      "featured-lead",
+                      "featured-list"
+                    ]
+                  },
+                  "visible": {
+                    "type": "boolean"
+                  },
+                  "props": {
+                    "type": "object",
+                    "properties": {
+                      "collection": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "items": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "default": []
+                      },
+                      "heading": {
+                        "type": "string"
+                      },
+                      "showExcerpt": {
+                        "type": "boolean",
+                        "default": true
+                      },
+                      "showImage": {
+                        "type": "boolean",
+                        "default": true
+                      },
+                      "showDate": {
+                        "type": "boolean",
+                        "default": true
+                      }
+                    },
+                    "required": [
+                      "collection"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "settings": {
+                    "$ref": "#/definitions/PageSchemaPublish/properties/sections/items/anyOf/0/properties/settings"
+                  }
+                },
+                "required": [
+                  "id",
+                  "type",
+                  "variant",
+                  "visible",
+                  "props",
+                  "settings"
+                ],
+                "additionalProperties": false
               }
             ]
           },

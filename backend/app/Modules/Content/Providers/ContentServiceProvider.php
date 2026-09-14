@@ -14,6 +14,7 @@ use App\Modules\Content\Infrastructure\Observers\EntryObserver;
 use App\Modules\Content\Infrastructure\Rendering\CollectionGridResolver;
 use App\Modules\Content\Infrastructure\Rendering\CollectionRouteResolver;
 use App\Modules\Content\Infrastructure\Rendering\EntrySitemapSource;
+use App\Modules\Content\Infrastructure\Rendering\FeaturedResolver;
 use App\Modules\Content\Listeners\ProvisionArticleContent;
 use App\Modules\Content\Listeners\RecordEntryPublished;
 use App\Modules\Content\Policies\AuthorPolicy;
@@ -43,8 +44,8 @@ final class ContentServiceProvider extends ServiceProvider
         // abstracción, sin depender de Content (degradación elegante si no se enlaza).
         $this->app->bind(DynamicRouteResolver::class, CollectionRouteResolver::class);
 
-        // Aporta su resolver de sección (collection-grid) al composite de kernel.
-        $this->app->tag([CollectionGridResolver::class], SectionDataResolver::TAG);
+        // Aporta sus resolvers de sección (collection-grid, featured) al composite de kernel.
+        $this->app->tag([CollectionGridResolver::class, FeaturedResolver::class], SectionDataResolver::TAG);
 
         // Aporta las entries publicadas enrutables al sitemap (contrato de kernel).
         $this->app->tag([EntrySitemapSource::class], SitemapUrlSource::TAG);

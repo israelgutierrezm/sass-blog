@@ -13,6 +13,8 @@ use App\Modules\Builder\Http\Requests\StorePageRequest;
 use App\Modules\Builder\Http\Requests\UpdatePageRequest;
 use App\Modules\Builder\Http\Resources\PageResource;
 use App\Modules\Builder\Infrastructure\Models\Page;
+use App\Modules\Shared\Domain\Capabilities\Capabilities;
+use App\Modules\Shared\Domain\Capabilities\Capability;
 use App\Modules\Sites\Infrastructure\Models\Site;
 use App\Modules\Tenancy\Infrastructure\Models\Workspace;
 use Illuminate\Http\JsonResponse;
@@ -80,6 +82,7 @@ final class PageController extends Controller
             // Objetos del JSON crudo (preserva {} de settings/props vacíos).
             $schema = data_get(json_decode((string) $request->getContent()), 'schema')
                 ?? $request->validated('schema');
+            $this->guardFeaturedCapability($schema);
             app(SaveDraft::class)->handle($pageModel, $schema);
         }
 
@@ -125,6 +128,21 @@ final class PageController extends Controller
         );
 
         return response()->json(['url' => $url, 'expires_at' => $expiresAt->toIso8601String()]);
+    }
+
+    /**
+     * Gating de portadas (ADR-024): usar una sección `featured` exige `publisher.frontpages`.
+     * Se valida AL GUARDAR (el servidor decide, no el Builder). Lanza CapabilityDeniedException
+     * (→ 403) si el plan no la incluye.
+     */
+    private function guardFeaturedCapability(mixed $schema): void
+    {
+        $sections = (array) data_get($schema, 'sections', []);
+        $usesFeatured = collect($sections)->contains(fn ($section) => data_get($section, 'type') === 'featured');
+
+        if ($usesFeatured) {
+            app(Capabilities::class)->authorize(Capability::PublisherFrontpages);
+        }
     }
 
     private function resolveSite(string $ulid): Site
