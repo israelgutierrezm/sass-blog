@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Database\Factories;
 
 use App\Modules\Content\Infrastructure\Models\Entry;
+use DateTimeInterface;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -35,5 +36,15 @@ class EntryFactory extends Factory
             'status' => Entry::STATUS_PUBLISHED,
             'published_at' => now(),
         ]);
+    }
+
+    public function inReview(): static
+    {
+        return $this->state(fn () => ['status' => Entry::STATUS_IN_REVIEW]);
+    }
+
+    public function scheduled(DateTimeInterface $at): static
+    {
+        return $this->state(fn () => ['status' => Entry::STATUS_SCHEDULED, 'published_at' => $at]);
     }
 }

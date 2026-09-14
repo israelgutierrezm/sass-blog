@@ -38,6 +38,10 @@ final class Entry extends Model
 
     public const STATUS_DRAFT = 'draft';
 
+    public const STATUS_IN_REVIEW = 'in_review';
+
+    public const STATUS_SCHEDULED = 'scheduled';
+
     public const STATUS_PUBLISHED = 'published';
 
     public const STATUS_ARCHIVED = 'archived';
@@ -48,6 +52,7 @@ final class Entry extends Model
         'title',
         'slug',
         'status',
+        'editorial_note',
         'author_id',
         'data',
         'created_by',
