@@ -41,6 +41,7 @@ return [
         'Navigation' => ['layer' => 'domain', 'label' => 'Navegación',     'depends_on' => ['Sites', 'Builder', 'Content']],
         'Publishing' => ['layer' => 'domain', 'label' => 'Publicación',     'depends_on' => ['Sites', 'Builder', 'Content', 'Seo']],
         'Domains' => ['layer' => 'domain', 'label' => 'Dominios',       'depends_on' => ['Sites']],
+        'Analytics' => ['layer' => 'domain', 'label' => 'Analítica',       'depends_on' => ['Sites']],
     ],
 
     /*
@@ -115,6 +116,25 @@ return [
         // Afordance de NO producción (E2E/staging): trata cualquier dominio como apuntado
         // al ingress → la verificación queda en verde sin DNS real. Prod: false.
         'auto_verify' => (bool) env('DOMAINS_AUTO_VERIFY', false),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Analítica (ADR-021)
+    |--------------------------------------------------------------------------
+    |
+    | Captura server-side de pageviews privacy-first. `retention_days`: poda del raw
+    | (`analytics_events`); los rollups diarios son permanentes. `bot_pattern`: regex
+    | (sin delimitadores) sobre el User-Agent para descartar bots. `basic_range_days`:
+    | ventana visible sin `analytics.advanced` (Pro amplía el rango + referrers + export).
+    |
+    */
+
+    'analytics' => [
+        'enabled' => (bool) env('ANALYTICS_ENABLED', true),
+        'retention_days' => (int) env('ANALYTICS_RETENTION_DAYS', 90),
+        'basic_range_days' => (int) env('ANALYTICS_BASIC_RANGE_DAYS', 30),
+        'bot_pattern' => env('ANALYTICS_BOT_PATTERN', 'bot|crawl|spider|slurp|bingpreview|facebookexternalhit|embedly|quora link preview|pinterest|vkshare|w3c_validator|curl|wget|python-requests|axios|headlesschrome|lighthouse|monitor|uptime'),
     ],
 
 ];
