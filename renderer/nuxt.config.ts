@@ -10,6 +10,17 @@ export default defineNuxtConfig({
     transpile: ['@sass-blog/site-components', '@sass-blog/site-schema', '@sass-blog/design-tokens'],
   },
 
+  // El renderer es host-routed por diseño (ADR-020): sirve sitios por el header Host,
+  // incluidos dominios propios ARBITRARIOS de tenants. El dev server de Vite bloquea por
+  // defecto los Host desconocidos (anti DNS-rebinding); hay que permitirlos para poder
+  // servir cualquier dominio en dev/E2E. Sólo afecta al dev server: el build de producción
+  // corre en Nitro (sin lista de Hosts), que ya responde a cualquier Host.
+  vite: {
+    server: {
+      allowedHosts: true,
+    },
+  },
+
   // CSS base de tokens (--st-* sobre .st-site-root).
   css: ['@sass-blog/design-tokens/tokens.css'],
 

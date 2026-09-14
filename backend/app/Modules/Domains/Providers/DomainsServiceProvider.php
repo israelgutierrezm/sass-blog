@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Domains\Providers;
 
 use App\Modules\Domains\Application\DnsResolver;
+use App\Modules\Domains\Infrastructure\AutoVerifyDnsResolver;
 use App\Modules\Domains\Infrastructure\Models\SiteDomain;
 use App\Modules\Domains\Infrastructure\SystemDnsResolver;
 use App\Modules\Domains\Policies\DomainPolicy;
@@ -20,7 +21,10 @@ final class DomainsServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->bind(DnsResolver::class, SystemDnsResolver::class);
+        // Prod: DNS del sistema. E2E/staging (auto_verify): verifica sin DNS real.
+        $this->app->bind(DnsResolver::class, config('sassblog.domains.auto_verify')
+            ? AutoVerifyDnsResolver::class
+            : SystemDnsResolver::class);
     }
 
     public function boot(): void

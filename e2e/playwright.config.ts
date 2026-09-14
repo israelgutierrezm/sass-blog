@@ -30,10 +30,13 @@ export default defineConfig({
         'php artisan migrate:fresh --seed --force && php artisan db:seed --class="Database\\Seeders\\E2eContentSeeder" --force && php artisan serve --host=127.0.0.1 --port=8000',
       cwd: '../backend',
       url: 'http://127.0.0.1:8000/up',
-      timeout: 120_000,
+      // migrate:fresh + siembra tarda ~3 min con el MySQL de WampServer (DDL lento en
+      // Windows); margen amplio para no dar falsos timeouts al arrancar el backend.
+      timeout: 300_000,
       reuseExistingServer: false,
-      // QUEUE sync: el build estático corre inline al disparar el deployment.
-      env: { DB_DATABASE: 'sass_blog_e2e', QUEUE_CONNECTION: 'sync' },
+      // QUEUE sync: el build estático y la verificación de dominios corren inline.
+      // DOMAINS_AUTO_VERIFY: sin DNS real, cualquier dominio conectado se verifica (E2E).
+      env: { DB_DATABASE: 'sass_blog_e2e', QUEUE_CONNECTION: 'sync', DOMAINS_AUTO_VERIFY: 'true' },
     },
     {
       command: 'pnpm --filter admin dev',

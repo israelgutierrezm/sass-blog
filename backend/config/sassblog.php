@@ -112,6 +112,9 @@ return [
     'domains' => [
         'ingress_cname' => env('DOMAINS_INGRESS_CNAME', 'ingress.sassblog.com'),
         'ingress_ip' => env('DOMAINS_INGRESS_IP', ''),
+        // Afordance de NO producción (E2E/staging): trata cualquier dominio como apuntado
+        // al ingress → la verificación queda en verde sin DNS real. Prod: false.
+        'auto_verify' => (bool) env('DOMAINS_AUTO_VERIFY', false),
     ],
 
 ];

@@ -73,7 +73,7 @@ paths) → artefacto **self-contained** (HTML + CSS + media copiada + sitemap/ro
 descargable. Capability de plan `site.export.static` (Pro). Suite E2E: 6 verticales verde
 (incl. export real: worker/sync → CLI Node → ZIP descargado).
 
-## Fase 6 — Dominios propios + SSL
+## Fase 6 — Dominios propios + SSL  ✅
 Conectar un dominio propio (`blog.acme.com`) a un sitio, verificarlo por DNS y servirlo con
 HTTPS automático.
 
@@ -83,6 +83,13 @@ HTTPS automático.
 automático con **Caddy `on_demand_tls`** gateado por un **ask-endpoint** (`tls-check`, sólo
 dominios `active`). Capability `site.custom_domain` (Pro). Frontera: el cert real es infra
 (Caddy/staging); la máquina de estados + verificación (DNS mock) + enrutado se testean.
+
+Implementado en 6 sub-slices (migración+modelo, `DnsResolver`+job de verificación, superficie
+pública `resolve`/`tls-check`, enrutado del renderer por `Host`, admin, infra Caddy, E2E). En
+dev/E2E la verificación corre sin DNS real (`DOMAINS_AUTO_VERIFY` + `AutoVerifyDnsResolver`) y el
+dev server del renderer acepta Hosts arbitrarios (`vite.server.allowedHosts`, sólo dev; en prod
+Nitro ya responde a cualquier Host). Suite E2E: **7 verticales verde** (incl. dominio conectado
+→ verificado → renderer sirviendo el sitio por Host).
 
 ## Futuro (contemplado, no implementado)
 Analytics, multilenguaje completo, editorial avanzado, paywall, memberships, newsletter,
