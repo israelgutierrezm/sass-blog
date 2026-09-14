@@ -89,6 +89,15 @@ export const entriesApi = {
     http.patch<ApiItem<EntryDto>>(`${entriesBase(ws, site, collection)}/${entry}`, input),
   publish: (ws: string, site: string, collection: string, entry: string) =>
     http.post<ApiItem<EntryDto>>(`${entriesBase(ws, site, collection)}/${entry}/publish`),
+  // Flujo editorial (ADR-023).
+  submitReview: (ws: string, site: string, collection: string, entry: string) =>
+    http.post<ApiItem<EntryDto>>(`${entriesBase(ws, site, collection)}/${entry}/submit-review`),
+  withdrawReview: (ws: string, site: string, collection: string, entry: string) =>
+    http.post<ApiItem<EntryDto>>(`${entriesBase(ws, site, collection)}/${entry}/withdraw-review`),
+  approve: (ws: string, site: string, collection: string, entry: string, publishAt?: string) =>
+    http.post<ApiItem<EntryDto>>(`${entriesBase(ws, site, collection)}/${entry}/approve`, publishAt ? { publish_at: publishAt } : {}),
+  requestChanges: (ws: string, site: string, collection: string, entry: string, note: string) =>
+    http.post<ApiItem<EntryDto>>(`${entriesBase(ws, site, collection)}/${entry}/request-changes`, { note }),
 }
 
 function categoriesBase(ws: string, site: string, collection: string): string {

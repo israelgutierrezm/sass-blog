@@ -116,6 +116,7 @@ export interface EntrySummaryDto {
   title: string
   slug: string
   status: string
+  editorial_note?: string | null
   path: string | null
   published_at: string | null
   updated_at?: string

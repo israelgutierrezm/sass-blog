@@ -17,6 +17,9 @@ const values = ref<Record<string, unknown>>({})
 const authorId = ref('')
 const categoryIds = ref<string[]>([])
 const status = ref('draft')
+const editorialNote = ref('')
+const scheduleAt = ref('')
+const changeNote = ref('')
 
 const error = ref('')
 const fieldErrors = ref<Record<string, string[]>>({})
@@ -38,6 +41,7 @@ onMounted(async () => {
     authorId.value = e.author?.id ?? ''
     categoryIds.value = e.categories.map((c) => c.id)
     status.value = e.status
+    editorialNote.value = e.editorial_note ?? ''
   }
   loaded.value = true
 })
@@ -92,6 +96,44 @@ async function publish(): Promise<void> {
   }
 }
 
+// --- Flujo editorial (ADR-023) ---
+async function runWorkflow(action: Promise<{ data: { status: string; editorial_note?: string | null } }>): Promise<void> {
+  error.value = ''
+  try {
+    const res = await action
+    status.value = res.data.status
+    editorialNote.value = res.data.editorial_note ?? ''
+  } catch (err) {
+    if (err instanceof ApiError) {
+      error.value = err.first('values') || err.first()
+    }
+  }
+}
+
+async function submitReview(): Promise<void> {
+  if (!(await save())) {
+    return
+  }
+  await runWorkflow(entriesApi.submitReview(props.ws, props.site, props.collection, entryId.value as string))
+}
+
+async function withdrawReview(): Promise<void> {
+  await runWorkflow(entriesApi.withdrawReview(props.ws, props.site, props.collection, entryId.value as string))
+}
+
+async function approve(): Promise<void> {
+  await runWorkflow(entriesApi.approve(props.ws, props.site, props.collection, entryId.value as string, scheduleAt.value || undefined))
+  scheduleAt.value = ''
+}
+
+async function requestChanges(): Promise<void> {
+  if (!changeNote.value) {
+    return
+  }
+  await runWorkflow(entriesApi.requestChanges(props.ws, props.site, props.collection, entryId.value as string, changeNote.value))
+  changeNote.value = ''
+}
+
 function toggleCategory(id: string, checked: boolean): void {
   const next = new Set(categoryIds.value)
   checked ? next.add(id) : next.delete(id)
@@ -111,7 +153,12 @@ function toggleCategory(id: string, checked: boolean): void {
       </div>
       <span
         class="rounded-full px-2 py-0.5 text-xs uppercase"
-        :class="status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100'"
+        :class="{
+          'bg-green-100 text-green-700': status === 'published',
+          'bg-amber-100 text-amber-700': status === 'in_review',
+          'bg-blue-100 text-blue-700': status === 'scheduled',
+          'bg-gray-100 text-gray-600': status === 'draft' || status === 'archived',
+        }"
         data-testid="entry-status"
       >{{ status }}</span>
     </div>
@@ -164,6 +211,55 @@ function toggleCategory(id: string, checked: boolean): void {
       </div>
 
       <p v-if="error" data-testid="entry-error" class="text-sm text-red-600">{{ error }}</p>
+
+      <!-- Flujo editorial (ADR-023) -->
+      <p v-if="editorialNote" data-testid="entry-editorial-note" class="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
+        Cambios solicitados: {{ editorialNote }}
+      </p>
+
+      <div v-if="entryId" class="rounded-md border border-gray-200 p-3">
+        <p class="mb-2 text-xs font-medium uppercase text-gray-400">Flujo editorial</p>
+
+        <button
+          v-if="status === 'draft'"
+          type="button"
+          data-testid="entry-submit-review"
+          class="rounded-md bg-amber-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-700"
+          @click="submitReview"
+        >
+          Enviar a revisión
+        </button>
+
+        <div v-else-if="status === 'in_review'" class="space-y-3">
+          <div class="flex flex-wrap items-end gap-2">
+            <label class="text-sm">
+              <span class="mb-1 block text-gray-600">Programar (opcional)</span>
+              <input v-model="scheduleAt" type="datetime-local" data-testid="entry-schedule-at" class="rounded-md border border-gray-300 px-2 py-1 text-sm" />
+            </label>
+            <button type="button" data-testid="entry-approve" class="rounded-md bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700" @click="approve">
+              {{ scheduleAt ? 'Aprobar y programar' : 'Aprobar y publicar' }}
+            </button>
+            <button type="button" data-testid="entry-withdraw" class="rounded-md border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50" @click="withdrawReview">
+              Retirar
+            </button>
+          </div>
+          <div class="flex flex-wrap items-end gap-2">
+            <label class="flex-1 text-sm">
+              <span class="mb-1 block text-gray-600">Pedir cambios (motivo)</span>
+              <input v-model="changeNote" type="text" data-testid="entry-change-note" placeholder="Qué falta…" class="w-full rounded-md border border-gray-300 px-2 py-1 text-sm" />
+            </label>
+            <button type="button" data-testid="entry-request-changes" class="rounded-md border border-amber-300 px-3 py-1.5 text-sm text-amber-700 hover:bg-amber-50" @click="requestChanges">
+              Pedir cambios
+            </button>
+          </div>
+        </div>
+
+        <p v-else-if="status === 'scheduled'" data-testid="entry-scheduled" class="text-sm text-blue-700">
+          Programada. Se publicará automáticamente en su fecha.
+        </p>
+
+        <p v-else class="text-sm text-gray-500">Estado: {{ status }}</p>
+      </div>
 
       <div class="flex gap-3 pt-2">
         <button
