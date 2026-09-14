@@ -203,3 +203,47 @@ describe('NewsletterForm', () => {
     expect(wrapper.text()).toContain('¡Hecho!')
   })
 })
+
+const FEAT_ID = '01ARZ3NDEKTSV4RRFFQ69G5FAV'
+
+const featuredSchema: PageSchema = {
+  schema_version: 1,
+  sections: [
+    {
+      id: FEAT_ID,
+      type: 'featured',
+      variant: 'featured-lead',
+      visible: true,
+      props: { collection: 'articles', items: ['X', 'Y'], heading: 'Lo último', showImage: false },
+      settings: {},
+    },
+  ],
+}
+
+const featuredResolved = {
+  [FEAT_ID]: {
+    items: [
+      { id: 'E1', title: 'Portada Uno', path: '/blog/uno', excerpt: 'Resumen uno' },
+      { id: 'E2', title: 'Portada Dos', path: '/blog/dos' },
+    ],
+    total: 2,
+  },
+}
+
+describe('Featured (canal resolved)', () => {
+  it('pinta el destacado + secundarias con hrefs prefijados (SSR)', async () => {
+    const html = await renderToString(
+      createSSRApp(PageRenderer, { schema: featuredSchema, resolved: featuredResolved, linkBase: '/_site/ABC' }),
+    )
+    expect(html).toContain('Lo último')
+    expect(html).toContain('Portada Uno') // destacado (lead)
+    expect(html).toContain('Portada Dos') // secundaria
+    expect(html).toContain('href="/_site/ABC/blog/uno"')
+    expect(html).toContain('href="/_site/ABC/blog/dos"')
+  })
+
+  it('sin datos resueltos muestra placeholder', async () => {
+    const html = await renderToString(createSSRApp(PageRenderer, { schema: featuredSchema }))
+    expect(html).toContain('Aún no hay artículos destacados')
+  })
+})
