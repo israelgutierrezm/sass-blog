@@ -2,6 +2,7 @@ import type { Component } from 'vue'
 import CollectionGrid from './components/CollectionGrid.vue'
 import Hero from './components/Hero.vue'
 import Navigation from './components/Navigation.vue'
+import NewsletterForm from './components/NewsletterForm.vue'
 import Text from './components/Text.vue'
 
 /** Mapa type -> componente Vue. Variante NO es un componente: es prop del suyo. */
@@ -10,6 +11,7 @@ const COMPONENTS: Record<string, Component> = {
   text: Text,
   'collection-grid': CollectionGrid,
   navigation: Navigation,
+  newsletter: NewsletterForm,
 }
 
 /**

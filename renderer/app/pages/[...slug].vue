@@ -128,5 +128,5 @@ if (import.meta.server && content) {
 </script>
 
 <template>
-  <PageRenderer v-if="schema" :schema="schema" :resolved="resolved" :link-base="linkBase" />
+  <PageRenderer v-if="schema" :schema="schema" :resolved="resolved" :link-base="linkBase" :site-id="siteId" :public-base="config.public.apiBase" />
 </template>

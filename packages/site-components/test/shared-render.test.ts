@@ -168,3 +168,38 @@ describe('Navigation (canal resolved)', () => {
     expect(html).not.toContain('st-nav__link')
   })
 })
+
+const NL_ID = '01ARZ3NDEKTSV4RRFFQ69G5FAV'
+
+const newsletterSchema: PageSchema = {
+  schema_version: 1,
+  sections: [
+    {
+      id: NL_ID,
+      type: 'newsletter',
+      variant: 'newsletter-inline',
+      visible: true,
+      props: { heading: 'Suscríbete', description: 'Novedades', buttonLabel: 'Unirme', successMessage: '¡Hecho!' },
+      settings: {},
+    },
+  ],
+}
+
+describe('NewsletterForm', () => {
+  it('pinta el formulario con el copy (SSR)', async () => {
+    const html = await renderToString(createSSRApp(PageRenderer, { schema: newsletterSchema }))
+    expect(html).toContain('Suscríbete')
+    expect(html).toContain('Unirme')
+    expect(html).toContain('data-testid="newsletter-email"')
+  })
+
+  it('en preview (sin contexto público) el submit muestra el éxito sin postear', async () => {
+    const wrapper = mount(PageRenderer, { props: { schema: newsletterSchema } })
+    await wrapper.find('[data-testid="newsletter-email"]').setValue('a@b.com')
+    await wrapper.find('form').trigger('submit')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('[data-testid="newsletter-success"]').exists()).toBe(true)
+    expect(wrapper.text()).toContain('¡Hecho!')
+  })
+})

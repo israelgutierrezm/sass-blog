@@ -1,6 +1,7 @@
 import { collectionGrid } from './components/collection-grid'
 import { hero } from './components/hero'
 import { navigation } from './components/navigation'
+import { newsletter } from './components/newsletter'
 import { text } from './components/text'
 import type { ComponentDefinition } from './define-component'
 
@@ -12,6 +13,7 @@ export const registry: Record<string, ComponentDefinition> = {
   [text.type]: text,
   [collectionGrid.type]: collectionGrid,
   [navigation.type]: navigation,
+  [newsletter.type]: newsletter,
 }
 
 export function componentTypes(): string[] {
