@@ -91,7 +91,7 @@ dev server del renderer acepta Hosts arbitrarios (`vite.server.allowedHosts`, s�
 Nitro ya responde a cualquier Host). Suite E2E: **7 verticales verde** (incl. dominio conectado
 → verificado → renderer sirviendo el sitio por Host).
 
-## Fase 7 — Analítica
+## Fase 7 — Analítica  ✅
 Medir el tráfico de los sitios publicados: visitas, páginas y referrers en el tiempo, por sitio,
 respetando la privacidad (sin cookies ni PII).
 
@@ -103,6 +103,11 @@ ingesta pública `collect`, sin JS/cookies/consentimiento; bots por heurística 
 + comando `analytics:rollup`; raw con retención. Permiso `analytics.view` (owner/admin/editor);
 analítica básica (30 días) para todos y `analytics.advanced` (Pro) → referrers + rango libre +
 export CSV. Deuda MVP: "hoy" se ve al día siguiente; bots imperfectos; sin beacon de cliente.
+
+Implementado en 7 sub-slices (módulo+modelos+permiso, ingesta `collect`, rollup+poda+comando,
+API+gating por plan, captura server-side en el renderer, dashboard admin, E2E). Suite E2E: **8
+verticales verde** (incl. publicar → visitar → rollup → el dashboard muestra la visita). Backend
+288 tests verde.
 
 ## Futuro (contemplado, no implementado)
 Multilenguaje completo, editorial avanzado, paywall, memberships, newsletter, marketplace,
