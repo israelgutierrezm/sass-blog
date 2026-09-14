@@ -34,9 +34,10 @@ export default defineConfig({
       // Windows); margen amplio para no dar falsos timeouts al arrancar el backend.
       timeout: 300_000,
       reuseExistingServer: false,
-      // QUEUE sync: el build estático y la verificación de dominios corren inline.
-      // DOMAINS_AUTO_VERIFY: sin DNS real, cualquier dominio conectado se verifica (E2E).
-      env: { DB_DATABASE: 'sass_blog_e2e', QUEUE_CONNECTION: 'sync', DOMAINS_AUTO_VERIFY: 'true' },
+      // QUEUE sync: el build estático, la verificación de dominios y el envío de newsletter
+      // corren inline. DOMAINS_AUTO_VERIFY: sin DNS real, un dominio conectado se verifica.
+      // MAIL_MAILER=log: no envía correo real (ni falla) al confirmar/enviar newsletter.
+      env: { DB_DATABASE: 'sass_blog_e2e', QUEUE_CONNECTION: 'sync', DOMAINS_AUTO_VERIFY: 'true', MAIL_MAILER: 'log' },
     },
     {
       command: 'pnpm --filter admin dev',

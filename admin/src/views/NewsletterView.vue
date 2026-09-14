@@ -94,7 +94,7 @@ async function send(c: CampaignDto): Promise<void> {
           <h2 class="text-sm font-medium text-gray-700">Suscriptores confirmados</h2>
           <span class="text-2xl font-semibold" data-testid="newsletter-subscribers-count">{{ confirmedCount() }}</span>
         </div>
-        <p class="mt-1 text-xs text-gray-500">{{ subscribers.length }} en total (incluye pendientes y bajas).</p>
+        <p class="mt-1 text-xs text-gray-500"><span data-testid="newsletter-subscribers-total">{{ subscribers.length }}</span> en total (incluye pendientes y bajas).</p>
       </div>
 
       <!-- Compositor -->

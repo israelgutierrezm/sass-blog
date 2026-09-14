@@ -109,7 +109,7 @@ API+gating por plan, captura server-side en el renderer, dashboard admin, E2E). 
 verticales verde** (incl. publicar → visitar → rollup → el dashboard muestra la visita). Backend
 288 tests verde.
 
-## Fase 8 — Newsletter
+## Fase 8 — Newsletter  ✅
 Capturar suscriptores desde el sitio publicado (formulario + doble opt-in) y enviarles campañas
 de correo, con baja fácil.
 
@@ -122,6 +122,11 @@ dev/E2E `array`/`log` + `Mail::fake`, prod por config). Captura **en el sitio** 
 `newsletter` (site-schema + site-components + renderer). Permiso `newsletter.manage`
 (owner/admin/editor); captura para todos y `newsletter.send` (Pro) para ENVIAR. Deuda MVP: sin
 tracking de aperturas/clics; una lista por sitio; sin envío real en dev.
+
+Implementado en 7 sub-slices (módulo+entidades, alta pública doble opt-in, envío idempotente,
+API admin+gating, admin, componente en el sitio, E2E). Suite E2E: **9 verticales verde** (incl.
+publicar página con newsletter → suscribirse en el sitio → aparece en el admin). Backend 312
+tests verde.
 
 ## Futuro (contemplado, no implementado)
 Multilenguaje completo, editorial avanzado, paywall, memberships, marketplace, plugins, headless
