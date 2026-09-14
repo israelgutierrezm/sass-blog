@@ -42,6 +42,7 @@ return [
         'Publishing' => ['layer' => 'domain', 'label' => 'Publicación',     'depends_on' => ['Sites', 'Builder', 'Content', 'Seo']],
         'Domains' => ['layer' => 'domain', 'label' => 'Dominios',       'depends_on' => ['Sites']],
         'Analytics' => ['layer' => 'domain', 'label' => 'Analítica',       'depends_on' => ['Sites']],
+        'Newsletter' => ['layer' => 'domain', 'label' => 'Newsletter',      'depends_on' => ['Sites']],
     ],
 
     /*
@@ -135,6 +136,21 @@ return [
         'retention_days' => (int) env('ANALYTICS_RETENTION_DAYS', 90),
         'basic_range_days' => (int) env('ANALYTICS_BASIC_RANGE_DAYS', 30),
         'bot_pattern' => env('ANALYTICS_BOT_PATTERN', 'bot|crawl|spider|slurp|bingpreview|facebookexternalhit|embedly|quora link preview|pinterest|vkshare|w3c_validator|curl|wget|python-requests|axios|headlesschrome|lighthouse|monitor|uptime'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Newsletter (ADR-022)
+    |--------------------------------------------------------------------------
+    |
+    | `send_batch`: cuántos suscriptores procesa por lote el job de envío. El
+    | transporte de correo se configura en config/mail.php (abstracción de Laravel;
+    | array/log en dev, proveedor real en prod).
+    |
+    */
+
+    'newsletter' => [
+        'send_batch' => (int) env('NEWSLETTER_SEND_BATCH', 100),
     ],
 
 ];

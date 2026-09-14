@@ -33,6 +33,7 @@ class PlanSeeder extends Seeder
             Capability::BuilderCustomCode,
             Capability::SiteExportStatic,
             Capability::AnalyticsAdvanced,
+            Capability::NewsletterSend,
         ]);
 
         // Agency: todo, incluida marca blanca.

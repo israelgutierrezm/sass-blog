@@ -27,6 +27,7 @@ enum Capability: string
     case PublisherFrontpages = 'publisher.frontpages';
     case PublisherPaywall = 'publisher.paywall';
     case AnalyticsAdvanced = 'analytics.advanced';
+    case NewsletterSend = 'newsletter.send';
     case AgencyWhiteLabel = 'agency.white_label';
     case ApiHeadless = 'api.headless';
 
@@ -47,6 +48,7 @@ enum Capability: string
             self::PublisherFrontpages => 'Editor de portadas',
             self::PublisherPaywall => 'Muro de pago',
             self::AnalyticsAdvanced => 'Analítica avanzada',
+            self::NewsletterSend => 'Envío de newsletter',
             self::AgencyWhiteLabel => 'Marca blanca (agencia)',
             self::ApiHeadless => 'API headless',
         };
