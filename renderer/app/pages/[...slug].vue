@@ -106,6 +106,25 @@ if (content) {
     meta: seoMeta,
   })
 }
+
+// Analítica (ADR-021): captura SERVER-SIDE y fire-and-forget. Sólo en SSR y sólo para un
+// render real (no redirect/404). Reenvía IP/UA/referrer del VISITANTE (el backend deriva el
+// visitor_hash sin almacenar la IP). No se hace await: no debe bloquear ni romper el render.
+if (import.meta.server && content) {
+  const reqHeaders = useRequestHeaders(['user-agent', 'x-forwarded-for', 'referer'])
+  const xff = reqHeaders['x-forwarded-for'] ?? ''
+  const socketIp = useRequestEvent()?.node?.req?.socket?.remoteAddress ?? ''
+  const visitorIp = (xff.split(',')[0] || '').trim() || socketIp
+
+  $fetch(`${base}/public/analytics/collect`, {
+    method: 'POST',
+    body: { site: siteId, path, referrer: reqHeaders.referer ?? null },
+    headers: {
+      'User-Agent': reqHeaders['user-agent'] ?? '',
+      'X-Visitor-Ip': visitorIp,
+    },
+  }).catch(() => {})
+}
 </script>
 
 <template>
