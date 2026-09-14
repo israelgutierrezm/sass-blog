@@ -128,6 +128,19 @@ API admin+gating, admin, componente en el sitio, E2E). Suite E2E: **9 verticales
 publicar página con newsletter → suscribirse en el sitio → aparece en el admin). Backend 312
 tests verde.
 
+## Fase 9 — Editorial avanzado
+Flujo editorial para las entradas: revisión (borrador → en revisión → aprobar/pedir cambios) y
+publicación programada a fecha futura. Caso periódico/revista.
+
+**Diseño aprobado** (`docs/fase9-design.md`, ADR-023). Extiende `Content`: estados nuevos
+`in_review` y `scheduled` en `Entry` (sin cambio de esquema; `status` es string), + columna
+`editorial_note` e índice `(status, published_at)`. Transiciones con el RBAC existente (redactor
+`entry.update` envía a revisión; editor `entry.publish` aprueba/programa/pide cambios), validadas
+en el dominio. Publicación programada por job `PublishScheduledEntries` (scheduler + comando) que
+pasa `scheduled → published` al vencer y emite `EntryPublished`. Capability `publisher.editorial`
+(Pro) gatea el flujo avanzado; la publicación directa sigue para todos. Deuda MVP: sin historial
+de revisiones ni asignación de revisores; una nota de feedback; sin previsualización aparte.
+
 ## Futuro (contemplado, no implementado)
-Multilenguaje completo, editorial avanzado, paywall, memberships, marketplace, plugins, headless
-API, white-label / agency mode, billing real (Stripe/Mercado Pago vía adapters).
+Multilenguaje completo, paywall, memberships, marketplace, plugins, headless API,
+white-label / agency mode, billing real (Stripe/Mercado Pago vía adapters).
