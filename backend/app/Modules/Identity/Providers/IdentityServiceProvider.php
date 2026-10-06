@@ -8,8 +8,12 @@ use App\Modules\Identity\Console\ReprovisionRbacCommand;
 use App\Modules\Identity\Listeners\ProvisionWorkspaceRbac;
 use App\Modules\Shared\Domain\Tenancy\WorkspaceContext;
 use App\Modules\Tenancy\Events\WorkspaceCreated;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 use Spatie\Permission\PermissionRegistrar;
 
 /**
@@ -41,5 +45,13 @@ final class IdentityServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands([ReprovisionRbacCommand::class]);
         }
+
+        // Limiters CON NOMBRE: el nombre entra en la clave del contador, así no comparten cuenta
+        // con otros endpoints de la misma IP (un `throttle:N,M` sin nombre usa sha1(dominio|ip)
+        // y todos los de una IP suman en el MISMO contador). Login por email+IP: frena la fuerza
+        // bruta sobre una cuenta sin bloquear a todos los de una IP compartida.
+        RateLimiter::for('auth-login', fn (Request $request) => Limit::perMinute(10)
+            ->by(Str::lower((string) $request->input('email')).'|'.$request->ip()));
+        RateLimiter::for('auth-register', fn (Request $request) => Limit::perMinute(10)->by((string) $request->ip()));
     }
 }

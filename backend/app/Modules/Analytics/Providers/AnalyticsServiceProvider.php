@@ -8,9 +8,13 @@ use App\Modules\Analytics\Application\Jobs\PruneRawEvents;
 use App\Modules\Analytics\Console\RollUpAnalyticsCommand;
 use App\Modules\Analytics\Infrastructure\Models\AnalyticsDailyStat;
 use App\Modules\Analytics\Policies\AnalyticsPolicy;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 
 /**
  * Registro del módulo Analytics (ADR-021). Autoriza la lectura del rollup por la Policy,
@@ -32,5 +36,9 @@ final class AnalyticsServiceProvider extends ServiceProvider
             $schedule->command('analytics:rollup')->dailyAt('00:20');
             $schedule->job(new PruneRawEvents)->dailyAt('03:00');
         });
+
+        // Ingesta: por SITIO (todo llega de la IP del renderer; por IP se ahogaría la plataforma).
+        RateLimiter::for('analytics-collect', fn (Request $request) => Limit::perMinute(3000)
+            ->by(Str::upper((string) $request->input('site'))));
     }
 }
