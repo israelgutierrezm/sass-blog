@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Newsletter\Infrastructure\Models\Campaign;
+use App\Modules\Newsletter\Infrastructure\Models\CampaignSend;
 use App\Modules\Newsletter\Infrastructure\Models\Subscriber;
 use App\Modules\Newsletter\Mail\CampaignMail;
 use App\Modules\Sites\Infrastructure\Models\Site;
@@ -62,6 +63,7 @@ it('el plan básico no puede enviar (403) y no manda correos', function () {
 
     $this->postJson(newsletterUrl($ws, $site)."/campaigns/{$campaign->ulid}/send")->assertForbidden();
     Mail::assertNothingSent();
+    withinWorkspace($ws, fn () => expect(Campaign::find($campaign->id)->status)->toBe(Campaign::STATUS_DRAFT));
 });
 
 it('no re-envía una campaña ya enviada (422)', function () {
@@ -72,18 +74,67 @@ it('no re-envía una campaña ya enviada (422)', function () {
     $this->postJson(newsletterUrl($ws, $site)."/campaigns/{$campaign->ulid}/send")->assertStatus(422);
 });
 
+it('doble clic: una campaña que ya se está enviando no se vuelve a encolar (422, sin correos)', function () {
+    ['user' => $user, 'ws' => $ws, 'site' => $site] = cmsOwnerContext();
+    $campaign = withinWorkspace($ws, function () use ($site) {
+        Subscriber::factory()->confirmed()->create(['site_id' => $site->id]);
+
+        return Campaign::factory()->create(['site_id' => $site->id, 'status' => Campaign::STATUS_SENDING]);
+    });
+    Sanctum::actingAs($user);
+
+    $this->postJson(newsletterUrl($ws, $site)."/campaigns/{$campaign->ulid}/send")->assertStatus(422);
+    Mail::assertNothingSent();
+});
+
+it('una campaña interrumpida (failed) se reanuda sin repetir a quien ya recibió', function () {
+    ['user' => $user, 'ws' => $ws, 'site' => $site] = cmsOwnerContext();
+    $campaign = withinWorkspace($ws, function () use ($site) {
+        $subs = Subscriber::factory()->confirmed()->count(3)->create(['site_id' => $site->id]);
+        $campaign = Campaign::factory()->create(['site_id' => $site->id, 'status' => Campaign::STATUS_FAILED]);
+        CampaignSend::factory()->create(['campaign_id' => $campaign->id, 'subscriber_id' => $subs[0]->id]);
+
+        return $campaign;
+    });
+    Sanctum::actingAs($user);
+
+    $this->postJson(newsletterUrl($ws, $site)."/campaigns/{$campaign->ulid}/send")
+        ->assertOk()
+        ->assertJsonPath('data.status', 'sent')
+        ->assertJsonPath('data.sent_count', 3);
+
+    Mail::assertSent(CampaignMail::class, 2); // sólo los 2 que faltaban
+});
+
+it('stats cuenta los suscriptores por estado en BD (no sobre la página de 50 del listado)', function () {
+    ['user' => $user, 'ws' => $ws, 'site' => $site] = ownerWithSite();
+    withinWorkspace($ws, function () use ($site) {
+        Subscriber::factory()->confirmed()->count(55)->create(['site_id' => $site->id]);
+        Subscriber::factory()->count(2)->create(['site_id' => $site->id]);             // pending
+        Subscriber::factory()->unsubscribed()->create(['site_id' => $site->id]);
+    });
+    Sanctum::actingAs($user);
+
+    $this->getJson(newsletterUrl($ws, $site).'/subscribers/stats')
+        ->assertOk()
+        ->assertExactJson(['data' => ['pending' => 2, 'confirmed' => 55, 'unsubscribed' => 1, 'total' => 58]]);
+});
+
 it('un viewer no puede gestionar la newsletter (403)', function () {
     ['ws' => $ws, 'site' => $site] = ownerWithSite();
     $viewer = memberWithRole($ws, 'viewer');
     Sanctum::actingAs($viewer);
 
     $this->getJson(newsletterUrl($ws, $site).'/subscribers')->assertForbidden();
+    $this->getJson(newsletterUrl($ws, $site).'/subscribers/stats')->assertForbidden();
 });
 
 it('aísla la newsletter entre workspaces (sitio ajeno → 404)', function () {
     ['user' => $userA, 'ws' => $wsA] = ownerWithSite('a@example.com');
-    ['site' => $siteB] = ownerWithSite('b@example.com');
+    ['ws' => $wsB, 'site' => $siteB] = ownerWithSite('b@example.com');
+    withinWorkspace($wsB, fn () => Subscriber::factory()->confirmed()->count(3)->create(['site_id' => $siteB->id]));
     Sanctum::actingAs($userA);
 
     $this->getJson(newsletterUrl($wsA, $siteB).'/subscribers')->assertNotFound();
+    $this->getJson(newsletterUrl($wsA, $siteB).'/subscribers/stats')->assertNotFound();
 });

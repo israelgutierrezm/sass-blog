@@ -4,9 +4,13 @@ import { SITE_CONTEXT } from '../context'
 
 /**
  * Formulario de captura de newsletter (ADR-022). El copy viene por `propsData`; el destino
- * (sitio + API pública) por el contexto inyectado por el renderer. El submit hace POST al
- * endpoint público `subscribe` (doble opt-in). Sin contexto público (preview del Builder) es
- * inerte: muestra el mensaje de éxito localmente sin postear.
+ * (sitio + API pública) por el contexto inyectado por el renderer.
+ *
+ * Mejora progresiva: el HTML es un `<form method="post">` real hacia el endpoint público
+ * `subscribe` (doble opt-in), así funciona SIN JS (export estático, o antes de hidratar) y el
+ * backend responde con su propia página. Hidratado, el submit va por fetch y se queda en la
+ * página. Sin contexto público (preview del Builder) no postea: avisa de que es una vista previa
+ * (no simula un alta que no ocurrió).
  */
 interface NewsletterProps {
   heading?: string
@@ -19,23 +23,26 @@ const props = defineProps<{ propsData?: NewsletterProps; variant?: string }>()
 
 const ctx = inject(SITE_CONTEXT, {})
 const email = ref('')
-const state = ref<'idle' | 'sending' | 'done' | 'error'>('idle')
+const state = ref<'idle' | 'sending' | 'done' | 'error' | 'preview'>('idle')
 
-const canPost = computed(() => Boolean(ctx.siteId && ctx.publicBase))
+/** Endpoint público de alta; undefined sin contexto (preview) → el form no tiene `action`. */
+const action = computed(() =>
+  ctx.siteId && ctx.publicBase ? `${ctx.publicBase}/public/sites/${ctx.siteId}/newsletter/subscribe` : undefined,
+)
 
 async function submit(): Promise<void> {
   if (state.value === 'sending') {
     return
   }
 
-  if (!canPost.value) {
-    state.value = 'done' // preview: sin destino, muestra el éxito localmente
+  if (!action.value) {
+    state.value = 'preview'
     return
   }
 
   state.value = 'sending'
   try {
-    const res = await fetch(`${ctx.publicBase}/public/sites/${ctx.siteId}/newsletter/subscribe`, {
+    const res = await fetch(action.value, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({ email: email.value }),
@@ -55,15 +62,19 @@ async function submit(): Promise<void> {
     <p v-if="state === 'done'" class="st-newsletter__success" data-testid="newsletter-success">
       {{ propsData?.successMessage ?? '¡Gracias!' }}
     </p>
-    <form v-else class="st-newsletter__form" @submit.prevent="submit">
+    <form v-else class="st-newsletter__form" method="post" :action="action" @submit.prevent="submit">
       <input
-        v-model="email" type="email" required placeholder="tu@correo.com"
+        v-model="email" name="email" type="email" required autocomplete="email"
+        placeholder="tu@correo.com" aria-label="Correo electrónico"
         data-testid="newsletter-email" class="st-newsletter__input"
       />
       <button type="submit" :disabled="state === 'sending'" data-testid="newsletter-submit" class="st-newsletter__button">
         {{ propsData?.buttonLabel ?? 'Suscribirme' }}
       </button>
       <p v-if="state === 'error'" class="st-newsletter__error">No se pudo completar. Inténtalo de nuevo.</p>
+      <p v-if="state === 'preview'" class="st-newsletter__note" data-testid="newsletter-preview-note">
+        Vista previa: el formulario se activa en el sitio publicado.
+      </p>
     </form>
   </section>
 </template>
@@ -117,6 +128,11 @@ async function submit(): Promise<void> {
 .st-newsletter__error {
   flex-basis: 100%;
   color: #dc2626;
+  font-size: 0.875rem;
+}
+.st-newsletter__note {
+  flex-basis: 100%;
+  color: var(--st-color-text-muted, #6b7280);
   font-size: 0.875rem;
 }
 </style>

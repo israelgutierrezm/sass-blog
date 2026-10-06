@@ -19,6 +19,7 @@ import type {
   RedirectDto,
   SiteDto,
   SubscriberDto,
+  SubscriberStatsDto,
   WorkspaceDto,
 } from '@sass-blog/shared-types'
 import { http } from './http'
@@ -247,6 +248,8 @@ function newsletterBase(ws: string, site: string): string {
 export const newsletterApi = {
   subscribers: (ws: string, site: string) =>
     http.get<ApiCollection<SubscriberDto>>(`${newsletterBase(ws, site)}/subscribers`),
+  subscriberStats: (ws: string, site: string) =>
+    http.get<ApiItem<SubscriberStatsDto>>(`${newsletterBase(ws, site)}/subscribers/stats`),
   campaigns: (ws: string, site: string) =>
     http.get<ApiCollection<CampaignDto>>(`${newsletterBase(ws, site)}/campaigns`),
   createCampaign: (ws: string, site: string, input: { subject: string; body: string }) =>

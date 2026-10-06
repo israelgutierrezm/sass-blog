@@ -9,7 +9,8 @@ use Illuminate\Support\Facades\Schema;
 /**
  * Registro de envío por-destinatario (ADR-022). Da IDEMPOTENCIA al envío de una campaña:
  * la unique (campaign_id, subscriber_id) hace que re-ejecutar el job salte a quien ya recibió.
- * Guarda enviado/fallido; el tracking de aperturas/clics queda fuera del MVP.
+ * La fila se inserta como `pending` ANTES de enviar (reclamo: como mucho un correo por
+ * destinatario) y pasa a sent/failed; el tracking de aperturas/clics queda fuera del MVP.
  */
 return new class extends Migration
 {
@@ -20,7 +21,7 @@ return new class extends Migration
             $table->foreignId('workspace_id')->constrained('workspaces')->cascadeOnDelete();
             $table->foreignId('campaign_id')->constrained('newsletter_campaigns')->cascadeOnDelete();
             $table->foreignId('subscriber_id')->constrained('newsletter_subscribers')->cascadeOnDelete();
-            $table->string('status', 20); // sent|failed
+            $table->string('status', 20); // pending|sent|failed
             $table->timestamp('sent_at')->nullable();
             $table->timestamps();
 

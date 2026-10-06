@@ -56,6 +56,9 @@ Todas: `workspace_id` NOT NULL (global scope), `ScopedToSite`, FK a `sites`.
 
 ## Superficie pública (ADR-006, `public.php`, sin auth, throttle)
 
+> **Actualizado por ADR-027 (2026-10-06):** `confirm`/`unsubscribe` por GET sólo muestran una
+> página; la acción va por POST (también el one-click de RFC 8058). Limiters con nombre (ADR-026).
+
 - `POST public/sites/{site}/newsletter/subscribe` — body `{ email }`. Resuelve el sitio en el
   servidor; crea `pending` (o reactiva) + `ConfirmationMail`. 202/204 siempre (no filtra existencia).
 - `GET public/newsletter/confirm?token=` — `confirmed` (idempotente).

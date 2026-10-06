@@ -61,7 +61,16 @@ final class CampaignController extends Controller
         $siteModel = $this->resolveSite($site);
         $campaignModel = $this->resolveCampaign($siteModel, $campaign);
         $this->authorize('update', $campaignModel);
-        abort_unless($campaignModel->isDraft(), 422, 'La campaña ya no es un borrador.');
+
+        // Compare-and-swap ATÓMICO: sólo una petición pasa de draft/failed a sending. Un doble
+        // clic (o dos admins a la vez) no encola dos envíos; una campaña `failed` se reanuda
+        // (el job no repite a quien ya recibió).
+        $claimed = Campaign::query()
+            ->whereKey($campaignModel->id)
+            ->whereIn('status', [Campaign::STATUS_DRAFT, Campaign::STATUS_FAILED])
+            ->update(['status' => Campaign::STATUS_SENDING]);
+
+        abort_if($claimed === 0, 422, 'La campaña ya se está enviando o ya se envió.');
 
         SendCampaign::dispatch($campaignModel->id, $siteModel->workspace_id);
 

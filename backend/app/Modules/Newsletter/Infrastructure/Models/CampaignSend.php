@@ -29,6 +29,9 @@ final class CampaignSend extends Model
 
     protected $table = 'newsletter_campaign_sends';
 
+    /** Reclamado por un worker (la fila existe ANTES de enviar: la unique impide un 2.º envío). */
+    public const STATUS_PENDING = 'pending';
+
     public const STATUS_SENT = 'sent';
 
     public const STATUS_FAILED = 'failed';

@@ -1,6 +1,6 @@
 import type { PageSchema } from '@sass-blog/site-schema'
 import { mount } from '@vue/test-utils'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { createSSRApp } from 'vue'
 import { renderToString } from 'vue/server-renderer'
 import { PageRenderer } from '../src'
@@ -193,14 +193,29 @@ describe('NewsletterForm', () => {
     expect(html).toContain('data-testid="newsletter-email"')
   })
 
-  it('en preview (sin contexto público) el submit muestra el éxito sin postear', async () => {
+  it('con contexto público el HTML es un form POST real al endpoint (funciona sin JS)', async () => {
+    const html = await renderToString(createSSRApp(PageRenderer, {
+      schema: newsletterSchema, siteId: 'S1', publicBase: 'https://api.test/api/v1',
+    }))
+    expect(html).toContain('method="post"')
+    expect(html).toContain('action="https://api.test/api/v1/public/sites/S1/newsletter/subscribe"')
+    expect(html).toContain('name="email"')
+  })
+
+  it('en preview (sin contexto público) no postea ni simula el alta: avisa de la vista previa', async () => {
+    const fetchSpy = vi.fn()
+    vi.stubGlobal('fetch', fetchSpy)
     const wrapper = mount(PageRenderer, { props: { schema: newsletterSchema } })
+    expect(wrapper.find('form').attributes('action')).toBeUndefined()
+
     await wrapper.find('[data-testid="newsletter-email"]').setValue('a@b.com')
     await wrapper.find('form').trigger('submit')
     await wrapper.vm.$nextTick()
 
-    expect(wrapper.find('[data-testid="newsletter-success"]').exists()).toBe(true)
-    expect(wrapper.text()).toContain('¡Hecho!')
+    expect(fetchSpy).not.toHaveBeenCalled()
+    expect(wrapper.find('[data-testid="newsletter-success"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="newsletter-preview-note"]').exists()).toBe(true)
+    vi.unstubAllGlobals()
   })
 })
 

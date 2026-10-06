@@ -1,27 +1,23 @@
 <script setup lang="ts">
-import type { CampaignDto, SubscriberDto } from '@sass-blog/shared-types'
+import type { CampaignDto, SubscriberStatsDto } from '@sass-blog/shared-types'
 import { onMounted, onUnmounted, ref } from 'vue'
 import { newsletterApi } from '../services/api'
 import { ApiError } from '../services/http'
 
 const props = defineProps<{ ws: string; site: string }>()
 
-const subscribers = ref<SubscriberDto[]>([])
+const stats = ref<SubscriberStatsDto>({ pending: 0, confirmed: 0, unsubscribed: 0, total: 0 })
 const campaigns = ref<CampaignDto[]>([])
 const loading = ref(true)
 const error = ref('')
 const subject = ref('')
 const body = ref('')
 const creating = ref(false)
+const sendingId = ref<string | null>(null)
 let alive = true
 
 const STATUS_LABEL: Record<string, string> = {
-  draft: 'Borrador', sending: 'Enviando', sent: 'Enviada', failed: 'Falló',
-  pending: 'Pendiente', confirmed: 'Confirmado', unsubscribed: 'Baja',
-}
-
-function confirmedCount(): number {
-  return subscribers.value.filter((s) => s.status === 'confirmed').length
+  draft: 'Borrador', sending: 'Enviando', sent: 'Enviada', failed: 'Interrumpida',
 }
 
 function sending(): boolean {
@@ -30,8 +26,12 @@ function sending(): boolean {
 
 async function refresh(): Promise<void> {
   try {
-    subscribers.value = (await newsletterApi.subscribers(props.ws, props.site)).data
-    campaigns.value = (await newsletterApi.campaigns(props.ws, props.site)).data
+    const [s, c] = await Promise.all([
+      newsletterApi.subscriberStats(props.ws, props.site),
+      newsletterApi.campaigns(props.ws, props.site),
+    ])
+    stats.value = s.data
+    campaigns.value = c.data
   } catch (e) {
     error.value = e instanceof ApiError ? e.first() : 'No se pudo cargar la newsletter'
   }
@@ -67,11 +67,14 @@ async function create(): Promise<void> {
 
 async function send(c: CampaignDto): Promise<void> {
   error.value = ''
+  sendingId.value = c.id
   try {
     await newsletterApi.sendCampaign(props.ws, props.site, c.id)
     await refresh()
   } catch (e) {
     error.value = e instanceof ApiError ? e.first() : 'No se pudo enviar. El envío requiere plan Pro.'
+  } finally {
+    sendingId.value = null
   }
 }
 </script>
@@ -92,9 +95,12 @@ async function send(c: CampaignDto): Promise<void> {
       <div class="mb-8 rounded-lg border border-gray-200 bg-white p-4">
         <div class="flex items-baseline justify-between">
           <h2 class="text-sm font-medium text-gray-700">Suscriptores confirmados</h2>
-          <span class="text-2xl font-semibold" data-testid="newsletter-subscribers-count">{{ confirmedCount() }}</span>
+          <span class="text-2xl font-semibold" data-testid="newsletter-subscribers-count">{{ stats.confirmed }}</span>
         </div>
-        <p class="mt-1 text-xs text-gray-500"><span data-testid="newsletter-subscribers-total">{{ subscribers.length }}</span> en total (incluye pendientes y bajas).</p>
+        <p class="mt-1 text-xs text-gray-500">
+          <span data-testid="newsletter-subscribers-total">{{ stats.total }}</span> en total:
+          {{ stats.pending }} sin confirmar · {{ stats.unsubscribed }} bajas.
+        </p>
       </div>
 
       <!-- Compositor -->
@@ -134,13 +140,25 @@ async function send(c: CampaignDto): Promise<void> {
               :data-testid="`campaign-status-${c.id}`"
             >{{ STATUS_LABEL[c.status] ?? c.status }}</span>
           </div>
-          <p class="mt-1 text-xs text-gray-500">
+          <p class="mt-1 text-xs text-gray-500" :data-testid="`campaign-detail-${c.id}`">
             <template v-if="c.status === 'sent'">{{ c.sent_count }} enviados · {{ c.failed_count }} fallidos</template>
-            <template v-else>Borrador</template>
+            <template v-else-if="c.status === 'sending'">Enviando a {{ c.recipients_count }} suscriptores…</template>
+            <template v-else-if="c.status === 'failed'">
+              El envío se interrumpió: {{ c.sent_count }} enviados · {{ c.failed_count }} fallidos.
+              Al reanudarlo nadie recibe el correo dos veces.
+            </template>
+            <template v-else>Aún no se ha enviado.</template>
           </p>
-          <div class="mt-3">
-            <button v-if="c.status === 'draft'" class="text-sm text-blue-600 hover:underline" :data-testid="`campaign-send-${c.id}`" @click="send(c)">
-              Enviar a {{ confirmedCount() }} suscriptores
+          <div v-if="c.status === 'draft' || c.status === 'failed'" class="mt-3">
+            <button
+              class="text-sm text-blue-600 hover:underline disabled:cursor-not-allowed disabled:text-gray-400 disabled:no-underline"
+              :disabled="sendingId !== null || stats.confirmed === 0"
+              :title="stats.confirmed === 0 ? 'Aún no hay suscriptores confirmados' : undefined"
+              :data-testid="`campaign-send-${c.id}`"
+              @click="send(c)"
+            >
+              <template v-if="c.status === 'failed'">Reanudar envío</template>
+              <template v-else>Enviar a {{ stats.confirmed }} suscriptores</template>
             </button>
           </div>
         </li>

@@ -73,4 +73,29 @@ describe('render-static: renderManifest', () => {
     const css = await readFile(join(outDir, 'assets', 'styles.css'), 'utf8')
     expect(css).toContain('tokens + components')
   })
+
+  it('el form de newsletter del HTML estático postea a la API pública (sin JS)', async () => {
+    const outDir = await mkdtemp(join(tmpdir(), 'static-'))
+    const withForm: BuildManifest = {
+      site: { ulid: 'S1', name: 'Demo', base_url: 'https://demo.test', api_base: 'https://api.demo.test/api/v1' },
+      pages: [{
+        path: '/',
+        render: {
+          page: {
+            schema_version: 1,
+            sections: [{ id: '01ARZ3NDEKTSV4RRFFQ69G5FAV', type: 'newsletter', variant: 'newsletter-inline', visible: true, props: { heading: 'Suscríbete' }, settings: {} }],
+          },
+          seo: { title: 'Inicio' },
+        },
+      }],
+      media: [],
+    }
+
+    await renderManifest(withForm, { outDir, css: '' })
+
+    const home = await readFile(join(outDir, 'index.html'), 'utf8')
+    expect(home).toContain('method="post"')
+    expect(home).toContain('action="https://api.demo.test/api/v1/public/sites/S1/newsletter/subscribe"')
+    expect(home).toContain('name="email"')
+  })
 })

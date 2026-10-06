@@ -1,6 +1,8 @@
 # ADR-022 — Newsletter: captura con doble opt-in + envío de campañas por Laravel Mail
 
-- Estado: Aceptada
+- Estado: Aceptada — **la superficie pública (`confirm`/`unsubscribe` por GET) y el detalle del
+  envío quedan reemplazados por ADR-027** (GET muestra / POST actúa, baja en un clic, topes
+  anti-abuso, envío como mucho una vez); el resto sigue vigente.
 - Fecha: 2026-09-14
 - Contexto de fase: FASE 8 (Newsletter)
 - Complementa: ADR-006 (superficie pública), ADR-014 (capabilities), multitenancy.md

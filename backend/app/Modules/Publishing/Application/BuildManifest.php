@@ -39,7 +39,14 @@ final class BuildManifest
         }
 
         return [
-            'site' => ['ulid' => $site->ulid, 'name' => $site->name, 'base_url' => $baseUrl],
+            'site' => [
+                'ulid' => $site->ulid,
+                'name' => $site->name,
+                'base_url' => $baseUrl,
+                // API pública absoluta: el HTML estático no tiene JS de la app, así que los
+                // componentes interactivos (newsletter) postean aquí directamente (ADR-022).
+                'api_base' => rtrim((string) config('app.url'), '/').'/'.trim((string) config('sassblog.api.prefix'), '/'),
+            ],
             'pages' => $pages,
             'media' => $this->collectMedia($pages),
         ];

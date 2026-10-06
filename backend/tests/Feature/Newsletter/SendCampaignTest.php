@@ -61,3 +61,44 @@ it('el correo lleva el link de baja del suscriptor', function () {
 
     Mail::assertSent(CampaignMail::class, fn (CampaignMail $mail) => str_contains($mail->unsubscribeUrl, $token));
 });
+
+it('un destinatario ya reclamado por otro worker (pending) no recibe un segundo correo', function () {
+    [$ws, $site] = builderSite();
+    [$campaign, $claimed] = withinWorkspace($ws, function () use ($site) {
+        $subs = Subscriber::factory()->confirmed()->count(2)->create(['site_id' => $site->id]);
+        $campaign = Campaign::factory()->create(['site_id' => $site->id, 'status' => Campaign::STATUS_SENDING]);
+        CampaignSend::factory()->create([
+            'campaign_id' => $campaign->id,
+            'subscriber_id' => $subs[0]->id,
+            'status' => CampaignSend::STATUS_PENDING,
+            'sent_at' => null,
+        ]);
+
+        return [$campaign, $subs[0]];
+    });
+
+    SendCampaign::dispatchSync($campaign->id, $ws->id);
+
+    Mail::assertSent(CampaignMail::class, 1);
+    Mail::assertNotSent(CampaignMail::class, fn (CampaignMail $mail) => $mail->hasTo($claimed->email));
+});
+
+it('si el job muere, failed() deja la campaña en failed con los contadores parciales', function () {
+    [$ws, $site] = builderSite();
+    $campaign = withinWorkspace($ws, function () use ($site) {
+        $subs = Subscriber::factory()->confirmed()->count(2)->create(['site_id' => $site->id]);
+        $campaign = Campaign::factory()->create(['site_id' => $site->id, 'status' => Campaign::STATUS_SENDING]);
+        CampaignSend::factory()->create(['campaign_id' => $campaign->id, 'subscriber_id' => $subs[0]->id]);
+
+        return $campaign;
+    });
+
+    (new SendCampaign($campaign->id, $ws->id))->failed(new RuntimeException('timeout'));
+
+    withinWorkspace($ws, function () use ($campaign) {
+        $c = Campaign::find($campaign->id);
+        expect($c->status)->toBe(Campaign::STATUS_FAILED)
+            ->and($c->sent_count)->toBe(1)
+            ->and($c->failed_count)->toBe(0);
+    });
+});

@@ -49,8 +49,9 @@ it('compone el manifest: enumera lo publicado, arma payloads y recolecta media',
 
     $manifest = withinWorkspace($ws, fn () => app(BuildManifest::class)->forSite($site));
 
-    // Sitio
-    expect($manifest['site']['ulid'])->toBe($site->ulid);
+    // Sitio (+ API pública absoluta: destino de los forms del HTML estático)
+    expect($manifest['site']['ulid'])->toBe($site->ulid)
+        ->and($manifest['site']['api_base'])->toBe(rtrim((string) config('app.url'), '/').'/api/v1');
 
     // Enumeración: '/', '/acerca', '/blog/{slug}'; NO '/oculta'.
     $paths = collect($manifest['pages'])->pluck('path')->all();

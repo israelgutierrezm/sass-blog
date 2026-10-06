@@ -7,18 +7,25 @@ namespace App\Modules\Newsletter\Application;
 use App\Modules\Newsletter\Infrastructure\Models\Subscriber;
 
 /**
- * Baja de un suscriptor por su `unsubscribe_token` (ADR-022). Búsqueda GLOBAL (endpoint público).
- * Idempotente. El token va en cada correo de campaña. Devuelve false si el token no existe.
+ * Baja por `unsubscribe_token` (ADR-022). Búsqueda GLOBAL (endpoint público). Idempotente. El
+ * token va en cada correo de campaña y en la cabecera `List-Unsubscribe` (RFC 8058). La lectura
+ * (`find`) no cambia nada: la baja real va por POST (formulario o one-click del cliente de
+ * correo), para que los escáneres de enlaces no den de baja a nadie al abrir el correo.
  */
 final class Unsubscribe
 {
-    public function handle(string $token): bool
+    public function find(string $token): ?Subscriber
     {
         if ($token === '') {
-            return false;
+            return null;
         }
 
-        $subscriber = Subscriber::withoutGlobalScopes()->where('unsubscribe_token', $token)->first();
+        return Subscriber::withoutGlobalScopes()->where('unsubscribe_token', $token)->first();
+    }
+
+    public function handle(string $token): bool
+    {
+        $subscriber = $this->find($token);
 
         if ($subscriber === null) {
             return false;

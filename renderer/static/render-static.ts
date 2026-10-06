@@ -29,8 +29,16 @@ export interface ManifestPage {
   }
 }
 
+export interface ManifestSite {
+  ulid: string
+  name: string
+  base_url: string
+  /** API pública absoluta (p.ej. https://api.host/api/v1): destino de los forms (newsletter). */
+  api_base?: string
+}
+
 export interface BuildManifest {
-  site: { ulid: string; name: string; base_url: string }
+  site: ManifestSite
   pages: ManifestPage[]
   media: string[]
 }
@@ -98,10 +106,20 @@ ${body}
 `
 }
 
-/** Renderiza una página del manifest a HTML (linkBase '' → clean paths). */
-export async function renderPage(page: ManifestPage): Promise<string> {
+/**
+ * Renderiza una página del manifest a HTML (linkBase '' → clean paths). Con `site.api_base`
+ * los componentes interactivos reciben el contexto público (el form de newsletter postea a la
+ * API sin JS); sin él quedan inertes, como en el preview.
+ */
+export async function renderPage(page: ManifestPage, site?: ManifestSite): Promise<string> {
   const schema = { schema_version: page.render.page.schema_version, sections: page.render.page.sections }
-  const app = createSSRApp(PageRenderer, { schema, resolved: page.render.resolved, linkBase: '' })
+  const app = createSSRApp(PageRenderer, {
+    schema,
+    resolved: page.render.resolved,
+    linkBase: '',
+    siteId: site?.api_base ? site.ulid : undefined,
+    publicBase: site?.api_base,
+  })
   const body = await renderToString(app)
 
   return wrapDocument(body, page.render.seo, stylesheetHref(page.path))
@@ -110,7 +128,7 @@ export async function renderPage(page: ManifestPage): Promise<string> {
 /** Escribe todo el sitio (HTML por página + assets/styles.css) en `outDir`. */
 export async function renderManifest(manifest: BuildManifest, opts: { outDir: string, css: string }): Promise<{ files: number }> {
   for (const page of manifest.pages) {
-    const html = await renderPage(page)
+    const html = await renderPage(page, manifest.site)
     const file = join(opts.outDir, pathToFile(page.path))
     await mkdir(dirname(file), { recursive: true })
     await writeFile(file, html, 'utf8')

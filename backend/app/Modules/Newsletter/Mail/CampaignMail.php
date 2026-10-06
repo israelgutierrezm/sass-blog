@@ -8,6 +8,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Mail\Mailables\Headers;
 use Illuminate\Queue\SerializesModels;
 
 /**
@@ -28,6 +29,18 @@ final class CampaignMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(subject: $this->campaignSubject);
+    }
+
+    /**
+     * Baja en un clic (RFC 8058): el cliente de correo muestra "Darse de baja" y hace POST a
+     * esta URL con `List-Unsubscribe=One-Click`. Gmail/Yahoo lo exigen a los envíos masivos.
+     */
+    public function headers(): Headers
+    {
+        return new Headers(text: [
+            'List-Unsubscribe' => '<'.$this->unsubscribeUrl.'>',
+            'List-Unsubscribe-Post' => 'List-Unsubscribe=One-Click',
+        ]);
     }
 
     public function content(): Content

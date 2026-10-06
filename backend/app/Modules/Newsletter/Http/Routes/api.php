@@ -16,6 +16,7 @@ Route::middleware(['auth:sanctum', 'workspace'])
     ->name('newsletter.')
     ->group(function (): void {
         Route::get('newsletter/subscribers', [SubscriberController::class, 'index'])->name('subscribers.index');
+        Route::get('newsletter/subscribers/stats', [SubscriberController::class, 'stats'])->name('subscribers.stats');
         Route::delete('newsletter/subscribers/{subscriber}', [SubscriberController::class, 'destroy'])->name('subscribers.destroy');
 
         Route::get('newsletter/campaigns', [CampaignController::class, 'index'])->name('campaigns.index');
