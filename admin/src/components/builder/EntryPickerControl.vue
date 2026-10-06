@@ -6,7 +6,8 @@ import { entriesApi } from '../../services/api'
 /**
  * Control de curación de portadas (ADR-024): elige y ORDENA artículos publicados a mano.
  * `modelValue` es la lista de ULIDs en orden. Reordenar por drag-and-drop (HTML5 nativo).
- * Lista sólo artículos PUBLICADOS de la colección elegida (`collectionId`).
+ * Lista sólo artículos PUBLICADOS de la colección elegida (`collectionId`). Un elegido que ya
+ * no está publicado se marca como no disponible (la portada lo omite) para poder quitarlo.
  */
 const props = defineProps<{
   label: string
@@ -18,17 +19,20 @@ const props = defineProps<{
 const emit = defineEmits<{ 'update:modelValue': [value: string[]] }>()
 
 const available = ref<EntrySummaryDto[]>([])
+const loaded = ref(false)
 const toAdd = ref('')
 const dragIndex = ref<number | null>(null)
 
 const items = computed<string[]>(() => (Array.isArray(props.modelValue) ? (props.modelValue as string[]) : []))
 const addable = computed(() => available.value.filter((e) => !items.value.includes(e.id)))
 
-function titleOf(id: string): string {
-  return available.value.find((e) => e.id === id)?.title ?? id
+/** Título del elegido; undefined si ya no está entre los publicados de la colección. */
+function titleOf(id: string): string | undefined {
+  return available.value.find((e) => e.id === id)?.title
 }
 
 async function load(): Promise<void> {
+  loaded.value = false
   if (!props.collectionId) {
     available.value = []
     return
@@ -39,6 +43,7 @@ async function load(): Promise<void> {
   } catch {
     available.value = []
   }
+  loaded.value = true
 }
 
 onMounted(load)
@@ -53,6 +58,15 @@ function add(): void {
 
 function remove(id: string): void {
   emit('update:modelValue', items.value.filter((x) => x !== id))
+}
+
+function onDragStart(event: DragEvent, index: number): void {
+  dragIndex.value = index
+  // Firefox no inicia el arrastre si el dragstart no fija datos.
+  event.dataTransfer?.setData('text/plain', items.value[index] ?? '')
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = 'move'
+  }
 }
 
 function onDrop(target: number): void {
@@ -81,12 +95,17 @@ function onDrop(target: number): void {
         draggable="true"
         :data-testid="`picked-${id}`"
         class="flex items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-2 py-1 text-sm"
-        @dragstart="dragIndex = i"
+        @dragstart="onDragStart($event, i)"
         @dragover.prevent
-        @drop="onDrop(i)"
+        @drop.prevent="onDrop(i)"
+        @dragend="dragIndex = null"
       >
         <span class="cursor-move select-none text-gray-400">⋮⋮</span>
-        <span class="flex-1 truncate">{{ titleOf(id) }}</span>
+        <span v-if="titleOf(id)" class="flex-1 truncate">{{ titleOf(id) }}</span>
+        <span v-else-if="loaded" class="flex-1 truncate italic text-amber-700" :title="id" :data-testid="`unavailable-${id}`">
+          No disponible (ya no está publicado)
+        </span>
+        <span v-else class="flex-1 truncate text-gray-400">…</span>
         <button type="button" class="text-gray-400 hover:text-red-600" :data-testid="`remove-${id}`" @click="remove(id)">✕</button>
       </li>
     </ul>

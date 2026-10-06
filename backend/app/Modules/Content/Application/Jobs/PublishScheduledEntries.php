@@ -37,8 +37,17 @@ final class PublishScheduledEntries implements ShouldQueue
         $due->groupBy('workspace_id')->each(function ($entries, $workspaceId) use ($context): void {
             $context->runFor((int) $workspaceId, function () use ($entries): void {
                 foreach ($entries as $entry) {
-                    $entry->status = Entry::STATUS_PUBLISHED;
-                    $entry->save();
+                    // Reclamo ATÓMICO: sólo la ejecución cuyo UPDATE condicional toca la fila
+                    // emite el evento. Si dos barridos se solapan (o la entrada se retiró entre
+                    // la lectura y aquí), el segundo ve 0 filas y no publica ni re-emite.
+                    $claimed = Entry::query()
+                        ->whereKey($entry->id)
+                        ->where('status', Entry::STATUS_SCHEDULED)
+                        ->update(['status' => Entry::STATUS_PUBLISHED]);
+
+                    if ($claimed === 0) {
+                        continue;
+                    }
 
                     event(new EntryPublished(
                         $entry->workspace_id,

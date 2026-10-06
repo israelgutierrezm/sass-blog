@@ -51,3 +51,18 @@ it('un schema sin `featured` no exige la capability', function () {
 
     $this->patchJson(pagesUrl($ws, $site)."/{$page->ulid}", ['schema' => heroSchema('Hola')])->assertOk();
 });
+
+it('un PATCH denegado por el gating no deja cambios a medias (título y path intactos)', function () {
+    ['user' => $user, 'ws' => $ws, 'site' => $site] = cmsOwnerContext();
+    $page = makePage($ws, $site, 'Original', '/original');
+    Plan::where('key', 'pro')->firstOrFail()
+        ->capabilities()->detach(Capability::where('key', 'publisher.frontpages')->firstOrFail()->id);
+    Sanctum::actingAs($user);
+
+    $this->patchJson(pagesUrl($ws, $site)."/{$page->ulid}", [
+        'title' => 'Cambiado', 'path' => '/cambiado', 'schema' => featuredSchema(),
+    ])->assertForbidden();
+
+    $fresh = withinWorkspace($ws, fn () => $page->fresh());
+    expect($fresh->title)->toBe('Original')->and($fresh->path)->toBe('/original');
+});

@@ -95,3 +95,22 @@ it('emite el evento EntryPublished al publicar', function () {
         && $e->collectionId === $articles->id
         && $e->publishedBy === $user->id);
 });
+
+it('re-publicar una entry ya publicada es idempotente (no mueve published_at ni re-emite)', function () {
+    ['user' => $user, 'ws' => $ws, 'site' => $site, 'articles' => $articles] = cmsOwnerContext();
+    Sanctum::actingAs($user);
+    $base = "/api/v1/workspaces/{$ws->ulid}/sites/{$site->ulid}/collections/{$articles->ulid}/entries";
+    $ulid = draftEntryUlid($ws->ulid, $site->ulid, $articles->ulid);
+
+    $this->postJson("{$base}/{$ulid}/publish")->assertOk();
+    $first = withinWorkspace($ws, fn () => Entry::findByUlid($ulid)->published_at);
+
+    // Días después, otro "Publicar" sobre la misma entry no la sube al tope de "recientes".
+    $this->travel(2)->days();
+    Event::fake([EntryPublished::class]);
+    $this->postJson("{$base}/{$ulid}/publish")->assertOk()->assertJsonPath('data.status', 'published');
+
+    $again = withinWorkspace($ws, fn () => Entry::findByUlid($ulid)->published_at);
+    expect($again->equalTo($first))->toBeTrue();
+    Event::assertNotDispatched(EntryPublished::class);
+});

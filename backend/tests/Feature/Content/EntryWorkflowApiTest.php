@@ -93,3 +93,20 @@ it('una transición inválida da 422', function () {
 
     $this->postJson("{$base}/{$id}/approve")->assertStatus(422); // aprobar un draft
 });
+
+it('un editor edita borradores pero NO una entrada publicada (403); el owner sí', function () {
+    ['user' => $owner, 'ws' => $ws, 'site' => $site, 'articles' => $col] = cmsOwnerContext();
+    Sanctum::actingAs($owner);
+    $base = entriesBase($ws, $site, $col);
+    $draft = newEntry($base);
+    $live = newEntry($base);
+    $this->postJson("{$base}/{$live}/publish")->assertOk();
+
+    $editor = memberWithRole($ws, 'editor');
+    Sanctum::actingAs($editor);
+    $this->patchJson("{$base}/{$draft}", ['title' => 'Editado'])->assertOk();
+    $this->patchJson("{$base}/{$live}", ['title' => 'Cambio en vivo sin revisión'])->assertForbidden();
+
+    Sanctum::actingAs($owner);
+    $this->patchJson("{$base}/{$live}", ['title' => 'Corrección del editor jefe'])->assertOk();
+});

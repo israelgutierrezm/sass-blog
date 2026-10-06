@@ -18,8 +18,21 @@ const authorId = ref('')
 const categoryIds = ref<string[]>([])
 const status = ref('draft')
 const editorialNote = ref('')
+const publishedAt = ref<string | null>(null)
 const scheduleAt = ref('')
 const changeNote = ref('')
+
+/** Fecha programada en la hora LOCAL del editor (el backend la guarda en UTC). */
+const scheduledLabel = computed(() =>
+  publishedAt.value ? new Date(publishedAt.value).toLocaleString('es', { dateStyle: 'medium', timeStyle: 'short' }) : '',
+)
+
+/** `min` del datetime-local: ahora, en hora local (formato YYYY-MM-DDTHH:mm). */
+const nowLocal = computed(() => {
+  const d = new Date()
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset())
+  return d.toISOString().slice(0, 16)
+})
 
 const error = ref('')
 const fieldErrors = ref<Record<string, string[]>>({})
@@ -42,6 +55,7 @@ onMounted(async () => {
     categoryIds.value = e.categories.map((c) => c.id)
     status.value = e.status
     editorialNote.value = e.editorial_note ?? ''
+    publishedAt.value = e.published_at
   }
   loaded.value = true
 })
@@ -86,6 +100,7 @@ async function publish(): Promise<void> {
   try {
     const res = await entriesApi.publish(props.ws, props.site, props.collection, entryId.value as string)
     status.value = res.data.status
+    publishedAt.value = res.data.published_at
   } catch (err) {
     if (err instanceof ApiError) {
       error.value = err.first('values') || err.first()
@@ -97,12 +112,15 @@ async function publish(): Promise<void> {
 }
 
 // --- Flujo editorial (ADR-023) ---
-async function runWorkflow(action: Promise<{ data: { status: string; editorial_note?: string | null } }>): Promise<void> {
+async function runWorkflow(
+  action: Promise<{ data: { status: string; editorial_note?: string | null; published_at: string | null } }>,
+): Promise<void> {
   error.value = ''
   try {
     const res = await action
     status.value = res.data.status
     editorialNote.value = res.data.editorial_note ?? ''
+    publishedAt.value = res.data.published_at
   } catch (err) {
     if (err instanceof ApiError) {
       error.value = err.first('values') || err.first()
@@ -122,7 +140,23 @@ async function withdrawReview(): Promise<void> {
 }
 
 async function approve(): Promise<void> {
-  await runWorkflow(entriesApi.approve(props.ws, props.site, props.collection, entryId.value as string, scheduleAt.value || undefined))
+  // `datetime-local` no lleva zona: el navegador lo interpreta en hora LOCAL. Se envía como
+  // instante ISO (UTC) para que el backend no lo lea como si fuera UTC (adelantaría/atrasaría
+  // la publicación tantas horas como el desfase del editor).
+  let publishAt: string | undefined
+  if (scheduleAt.value) {
+    const when = new Date(scheduleAt.value)
+    if (Number.isNaN(when.getTime())) {
+      error.value = 'Fecha de programación no válida.'
+      return
+    }
+    publishAt = when.toISOString()
+  }
+  // Guarda primero: si el editor corrigió algo antes de aprobar, se aprueba ESE texto.
+  if (!(await save())) {
+    return
+  }
+  await runWorkflow(entriesApi.approve(props.ws, props.site, props.collection, entryId.value as string, publishAt))
   scheduleAt.value = ''
 }
 
@@ -234,7 +268,7 @@ function toggleCategory(id: string, checked: boolean): void {
           <div class="flex flex-wrap items-end gap-2">
             <label class="text-sm">
               <span class="mb-1 block text-gray-600">Programar (opcional)</span>
-              <input v-model="scheduleAt" type="datetime-local" data-testid="entry-schedule-at" class="rounded-md border border-gray-300 px-2 py-1 text-sm" />
+              <input v-model="scheduleAt" type="datetime-local" :min="nowLocal" data-testid="entry-schedule-at" class="rounded-md border border-gray-300 px-2 py-1 text-sm" />
             </label>
             <button type="button" data-testid="entry-approve" class="rounded-md bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700" @click="approve">
               {{ scheduleAt ? 'Aprobar y programar' : 'Aprobar y publicar' }}
@@ -255,7 +289,7 @@ function toggleCategory(id: string, checked: boolean): void {
         </div>
 
         <p v-else-if="status === 'scheduled'" data-testid="entry-scheduled" class="text-sm text-blue-700">
-          Programada. Se publicará automáticamente en su fecha.
+          Programada para {{ scheduledLabel }} (tu hora local). Se publicará automáticamente.
         </p>
 
         <p v-else class="text-sm text-gray-500">Estado: {{ status }}</p>
@@ -270,14 +304,16 @@ function toggleCategory(id: string, checked: boolean): void {
         >
           Guardar borrador
         </button>
+        <!-- Ya publicada: no se ofrece "Publicar" (re-publicar movería un artículo viejo al tope). -->
         <button
+          v-if="status !== 'published'"
           type="button"
           :disabled="saving || publishing"
           data-testid="entry-publish"
           class="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
           @click="publish"
         >
-          Publicar
+          {{ status === 'scheduled' ? 'Publicar ahora' : 'Publicar' }}
         </button>
       </div>
     </form>

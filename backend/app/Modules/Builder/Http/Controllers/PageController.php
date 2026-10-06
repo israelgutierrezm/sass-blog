@@ -20,6 +20,7 @@ use App\Modules\Tenancy\Infrastructure\Models\Workspace;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\ValidationException;
 
@@ -73,18 +74,27 @@ final class PageController extends Controller
         $pageModel = $this->resolvePage($siteModel, $page);
         $this->authorize('update', $pageModel);
 
-        $meta = $request->safe()->only(['title', 'path', 'status']);
-        if ($meta !== []) {
-            $pageModel->fill($meta)->save();
-        }
-
+        $schema = null;
         if ($request->has('schema')) {
             // Objetos del JSON crudo (preserva {} de settings/props vacíos).
             $schema = data_get(json_decode((string) $request->getContent()), 'schema')
                 ?? $request->validated('schema');
+            // Gating ANTES de escribir nada: un 403 no debe dejar el título/path ya cambiados
+            // (ni el redirect automático que dispara un cambio de path).
             $this->guardFeaturedCapability($schema);
-            app(SaveDraft::class)->handle($pageModel, $schema);
         }
+
+        $meta = $request->safe()->only(['title', 'path', 'status']);
+
+        // Meta + schema en una sola transacción: el PATCH se aplica entero o no se aplica.
+        DB::transaction(function () use ($pageModel, $meta, $schema): void {
+            if ($meta !== []) {
+                $pageModel->fill($meta)->save();
+            }
+            if ($schema !== null) {
+                app(SaveDraft::class)->handle($pageModel, $schema);
+            }
+        });
 
         return new PageResource($pageModel->fresh()->load(['draftVersion', 'publishedVersion']));
     }

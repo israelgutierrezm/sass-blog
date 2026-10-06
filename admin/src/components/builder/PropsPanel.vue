@@ -76,9 +76,20 @@ onMounted(async () => {
 watch(() => (section.value?.props as Record<string, unknown> | undefined)?.collection, loadCategories)
 
 function updateField(key: string, value: unknown): void {
-  if (section.value) {
-    builder.updateProps(section.value.id, { [key]: value })
+  if (!section.value) {
+    return
   }
+  const patch: Record<string, unknown> = { [key]: value }
+  // Los artículos curados (entry-picker) pertenecen a la colección elegida: al CAMBIARLA se
+  // vacían (si no, quedarían ULIDs de otra colección que la portada ya no puede resolver).
+  if (key === 'collection' && value !== (section.value.props as Record<string, unknown>).collection) {
+    for (const [k, f] of fields.value) {
+      if (f.control === 'entry-picker') {
+        patch[k] = []
+      }
+    }
+  }
+  builder.updateProps(section.value.id, patch)
 }
 </script>
 

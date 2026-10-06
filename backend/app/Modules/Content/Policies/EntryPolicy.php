@@ -8,9 +8,12 @@ use App\Models\User;
 use App\Modules\Content\Infrastructure\Models\Entry;
 
 /**
- * Autorización de entries (RBAC). editor crea/edita; publicar (sub-slice 8) queda
- * reservado a owner/admin. viewer sólo lee. El gating por plan lo hace el middleware
- * capability.
+ * Autorización de entries (RBAC). editor crea/edita BORRADORES; publicar queda reservado a
+ * owner/admin. viewer sólo lee. El gating por plan lo hace el middleware capability.
+ *
+ * Las entries son mutables (sin versionado): editar una PUBLICADA cambia el sitio en el acto, y
+ * una PROGRAMADA saldrá tal cual. Por eso modificarlas exige `entry.publish`; si no, un rol sin
+ * permiso de publicar alteraría contenido público sin revisión (ADR-023).
  */
 final class EntryPolicy
 {
@@ -31,6 +34,10 @@ final class EntryPolicy
 
     public function update(User $user, Entry $entry): bool
     {
+        if (in_array($entry->status, [Entry::STATUS_PUBLISHED, Entry::STATUS_SCHEDULED], true)) {
+            return $user->hasPermissionTo('entry.publish');
+        }
+
         return $user->hasPermissionTo('entry.update');
     }
 

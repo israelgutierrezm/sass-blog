@@ -80,12 +80,15 @@ final class MenuResolver implements SectionDataResolver
             ->whereIn('ulid', $pageTargets)
             ->pluck('path', 'ulid');
 
-        // entry → /{route_prefix}/{slug} (sólo si su colección es enrutable)
+        // entry → /{route_prefix}/{slug} (sólo si su colección es enrutable). SÓLO publicadas: una
+        // entrada en revisión o programada no debe aparecer en el menú público (filtraría su slug
+        // antes del embargo y el enlace daría 404); se omite como una referencia rota.
         $entryPaths = [];
         if ($entryTargets !== []) {
             Entry::query()
                 ->where('site_id', $siteId)
                 ->whereIn('ulid', $entryTargets)
+                ->published()
                 ->with('collection:id,route_prefix')
                 ->get()
                 ->each(function (Entry $entry) use (&$entryPaths): void {

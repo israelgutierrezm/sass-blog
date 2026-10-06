@@ -72,7 +72,9 @@ final class ContentServiceProvider extends ServiceProvider
         }
 
         $this->callAfterResolving(Schedule::class, function (Schedule $schedule): void {
-            $schedule->command('content:publish-scheduled')->everyMinute();
+            // withoutOverlapping: si un barrido tarda más de un minuto, el siguiente no arranca
+            // encima (el reclamo atómico del job ya evita duplicados; esto evita trabajo inútil).
+            $schedule->command('content:publish-scheduled')->everyMinute()->withoutOverlapping();
         });
     }
 }

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Content\Infrastructure\Models\Entry;
 use App\Modules\Navigation\Infrastructure\Models\Menu;
 use App\Modules\Navigation\Infrastructure\Models\MenuItem;
 use App\Modules\Shared\Domain\Rendering\SectionDataResolver;
@@ -118,4 +119,21 @@ it('no hace N+1: resuelve muchos ítems de página en consultas acotadas', funct
     // menu + items + pages (batch) = 3; el conteo NO crece con el número de ítems.
     expect($res['items'])->toHaveCount(5)
         ->and($queries)->toBeLessThanOrEqual(4);
+});
+
+it('omite enlaces a entradas NO publicadas (programadas): no filtra el slug embargado', function () {
+    ['ws' => $ws, 'site' => $site, 'articles' => $articles] = cmsOwnerContext();
+
+    withinWorkspace($ws, function () use ($site, $articles) {
+        $scheduled = Entry::factory()->scheduled(now()->addDay())->create([
+            'site_id' => $site->id, 'collection_id' => $articles->id, 'slug' => 'exclusiva-manana',
+        ]);
+        $menu = Menu::factory()->create(['site_id' => $site->id, 'handle' => 'primary']);
+        MenuItem::factory()->create([
+            'site_id' => $site->id, 'menu_id' => $menu->id, 'label' => 'Exclusiva',
+            'link_type' => 'entry', 'target_ulid' => $scheduled->ulid, 'url' => null,
+        ]);
+    });
+
+    expect(resolveNav($ws, $site->id)['items'])->toBe([]);
 });

@@ -18,6 +18,12 @@ final class PublishEntry
 {
     public function handle(Entry $entry, ?int $publishedBy = null): Entry
     {
+        // Idempotente: re-publicar una entrada YA publicada no hace nada. Si no, `published_at`
+        // volvería a "ahora" y un artículo antiguo saltaría al tope de las rejillas "recientes".
+        if ($entry->status === Entry::STATUS_PUBLISHED) {
+            return $entry;
+        }
+
         return DB::transaction(function () use ($entry, $publishedBy): Entry {
             $entry->status = Entry::STATUS_PUBLISHED;
             $entry->published_at = now();
