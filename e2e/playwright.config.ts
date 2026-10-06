@@ -1,9 +1,14 @@
 import { defineConfig, devices } from '@playwright/test'
+import { API_BASE, API_ORIGIN, API_PORT } from './env'
 
 /**
- * E2E del vertical de FASE 2: admin (5173) + renderer (3000) contra un backend
- * (8000) sobre una BD dedicada `sass_blog_e2e` que se migra y siembra en cada
- * corrida. Sin mocks: todo real.
+ * E2E de los verticales: admin (5173) + renderer (3000) contra un backend en un puerto
+ * PROPIO (8100 por defecto, ver ./env.ts) sobre una BD dedicada `sass_blog_e2e` que se migra
+ * y siembra en cada corrida. Sin mocks: todo real.
+ *
+ * Aislamiento: el backend E2E no usa el 8000 (lo suele ocupar el servidor de desarrollo de
+ * éste u otro proyecto). Admin y renderer reciben la URL de ese backend por env y NO se
+ * reutilizan si ya están corriendo: uno de desarrollo apuntaría a otro backend (otra BD).
  */
 export default defineConfig({
   testDir: './tests',
@@ -25,11 +30,11 @@ export default defineConfig({
   webServer: [
     {
       // Backend con BD de E2E: migra+siembra (+ usuario Pro para el CMS) y sirve.
-      // DB_DATABASE en env pisa .env.
+      // DB_DATABASE/APP_URL en env pisan .env.
       command:
-        'php artisan migrate:fresh --seed --force && php artisan db:seed --class="Database\\Seeders\\E2eContentSeeder" --force && php artisan serve --host=127.0.0.1 --port=8000',
+        `php artisan migrate:fresh --seed --force && php artisan db:seed --class="Database\\Seeders\\E2eContentSeeder" --force && php artisan serve --host=127.0.0.1 --port=${API_PORT}`,
       cwd: '../backend',
-      url: 'http://127.0.0.1:8000/up',
+      url: `${API_ORIGIN}/up`,
       // migrate:fresh + siembra tarda ~3 min con el MySQL de WampServer (DDL lento en
       // Windows); margen amplio para no dar falsos timeouts al arrancar el backend.
       timeout: 300_000,
@@ -37,21 +42,30 @@ export default defineConfig({
       // QUEUE sync: el build estático, la verificación de dominios y el envío de newsletter
       // corren inline. DOMAINS_AUTO_VERIFY: sin DNS real, un dominio conectado se verifica.
       // MAIL_MAILER=log: no envía correo real (ni falla) al confirmar/enviar newsletter.
-      env: { DB_DATABASE: 'sass_blog_e2e', QUEUE_CONNECTION: 'sync', DOMAINS_AUTO_VERIFY: 'true', MAIL_MAILER: 'log' },
+      // APP_URL: las URLs absolutas que genera el backend (media, enlaces) apuntan a ESTE backend.
+      env: {
+        DB_DATABASE: 'sass_blog_e2e',
+        APP_URL: API_ORIGIN,
+        QUEUE_CONNECTION: 'sync',
+        DOMAINS_AUTO_VERIFY: 'true',
+        MAIL_MAILER: 'log',
+      },
     },
     {
       command: 'pnpm --filter admin dev',
       cwd: '..',
       url: 'http://127.0.0.1:5173',
       timeout: 180_000,
-      reuseExistingServer: true,
+      reuseExistingServer: false,
+      env: { VITE_API_BASE: API_BASE },
     },
     {
       command: 'pnpm --filter renderer dev',
       cwd: '..',
       url: 'http://127.0.0.1:3000/health',
       timeout: 180_000,
-      reuseExistingServer: true,
+      reuseExistingServer: false,
+      env: { NUXT_API_INTERNAL_BASE: API_BASE, NUXT_PUBLIC_API_BASE: API_BASE },
     },
   ],
 })

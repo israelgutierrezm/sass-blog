@@ -14,5 +14,9 @@ export default defineConfig({
   // procese en vez de pre-bundlearlos con esbuild (que no entiende .vue).
   optimizeDeps: {
     exclude: ['@sass-blog/site-components', '@sass-blog/site-schema', '@sass-blog/design-tokens'],
+    // Las dependencias de terceros de los paquetes excluidos se pre-empaquetan al ARRANCAR. Si no,
+    // Vite las descubre al cargar la ruta diferida del builder, re-optimiza y recarga la página a
+    // mitad de la navegación (con la caché fría, p. ej. tras cambiar dependencias).
+    include: ['@sass-blog/site-schema > zod'],
   },
 })

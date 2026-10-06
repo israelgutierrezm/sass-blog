@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
+import { API_BASE as API } from '../env'
 
-const API = 'http://127.0.0.1:8000/api/v1'
 const RENDERER = 'http://localhost:3000'
 
 /**
