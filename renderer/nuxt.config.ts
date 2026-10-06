@@ -11,13 +11,14 @@ export default defineNuxtConfig({
   },
 
   // El renderer es host-routed por diseño (ADR-020): sirve sitios por el header Host,
-  // incluidos dominios propios ARBITRARIOS de tenants. El dev server de Vite bloquea por
-  // defecto los Host desconocidos (anti DNS-rebinding); hay que permitirlos para poder
-  // servir cualquier dominio en dev/E2E. Sólo afecta al dev server: el build de producción
-  // corre en Nitro (sin lista de Hosts), que ya responde a cualquier Host.
+  // incluidos dominios propios de tenants. El dev server de Vite bloquea por defecto los Host
+  // desconocidos (anti DNS-rebinding). En dev/E2E los dominios propios se simulan bajo `.test`
+  // (p.ej. `e2e-….example.test`), así que sólo se abren `.test` y `.localhost`: con `true`
+  // cualquier web podría leer el dev server por DNS rebinding. Sólo afecta al dev server: el
+  // build de producción corre en Nitro (sin lista de Hosts), que responde a cualquier Host.
   vite: {
     server: {
-      allowedHosts: true,
+      allowedHosts: ['.test', '.localhost'],
     },
   },
 

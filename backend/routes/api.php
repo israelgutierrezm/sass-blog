@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
-
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
+/*
+ * Sin rutas aquí a propósito. La API vive en los módulos (`app/Modules/{Modulo}/Http/Routes`),
+ * registrada por ModuleServiceProvider bajo el prefijo versionado `api/v1`. El `/api/user` del
+ * skeleton se quitó: devolvía el modelo Eloquent crudo (con el id secuencial); el usuario
+ * autenticado se obtiene de `GET /api/v1/me` (AuthController + Resource).
+ */
