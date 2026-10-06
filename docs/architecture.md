@@ -49,22 +49,25 @@ docs/        Documentación viva + ADRs
 | Shared (shared kernel) | Base de módulos, ULID, WorkspaceScope/Context, capabilities | 1 |
 | Tenancy | Workspaces, members, resolución de contexto de workspace | 1 |
 | Identity | Users, auth (Sanctum), RBAC (Spatie teams=workspace) | 1 |
-| Sites | Site, settings, branding, dominios (modelo) | 1 |
+| Sites | Site, settings, branding | 1 |
 | Audit | Bitácora inmutable de operaciones relevantes | 1 |
 | Billing | Plan, Capability, Subscription (sólo modelo) | 1 |
 | Platform | Super admin del SaaS (agrega entre workspaces) | futuro |
 | Builder | Page, PageVersion, secciones, component registry | 2 |
-| Content | Collections, fields, entries, templates, bindings | 3 |
-| Editorial | Articles preset, authors, categories, workflow | 3 |
+| Content | Collections, fields, entries, templates, bindings; preset de artículos (autores, categorías); flujo editorial — revisión + publicación programada (ADR-023); portadas `featured` (ADR-024) | 3 / 9 / 10 |
 | Media | Media library, transformaciones por job | 4 |
 | Navigation | Menus, menu items jerárquicos | 4 |
-| Seo | Meta, canonical, sitemap, robots, redirects, slug history | 4 |
-| Publishing | Deployment, targets dynamic/static, build jobs | 2 / 5 |
-| Domains | SiteDomain, verificación DNS/SSL | futuro |
-| Analytics | Page views, sessions, conversions | futuro |
+| Seo | Meta, canonical, sitemap, robots, redirects (el slug-history son redirects automáticos) | 4 |
+| Publishing | Deployment, export estático (CLI Node + mismos `site-components`) | 2 / 5 |
+| Domains | SiteDomain, verificación de propiedad (TXT) + apuntado DNS (ADR-025), enrutado del renderer por `Host`, TLS on-demand en el edge (ADR-020) | 6 |
+| Analytics | Pageviews capturados server-side sin PII, rollups diarios, dashboard (ADR-021) | 7 |
+| Newsletter | Suscriptores con doble opt-in, campañas, envío como mucho una vez por Laravel Mail, baja en un clic (ADR-022, ADR-027) | 8 |
 | Integrations | Webhooks, forms actions, terceros | futuro |
 
 > El shared kernel (Platform) puede ser dependido por todos; él no depende de nadie.
+> El "dominio Editorial" planeado no es un módulo aparte: vive en `Content` (autores/categorías
+> en F3, flujo editorial en F9, portadas en F10). Fuente de verdad de los módulos cargados:
+> `backend/config/sassblog.php` (`modules`).
 
 ## 5. Contrato de componentes compartidos (la apuesta técnica central)
 

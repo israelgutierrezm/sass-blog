@@ -161,6 +161,26 @@ Implementado en 4 sub-slices (componente+resolver+gating, Featured.vue, admin en
 drag-and-drop, E2E). Suite E2E: **11 verticales verde** (incl. curar portada → artículos en orden
 en el sitio). Backend 334 tests verde.
 
+## Revisión post-FASE 10 — endurecimiento  ✅
+Revisión transversal de lo construido (sin funcionalidad nueva de producto):
+
+- **Dominios (ADR-025):** activar exige probar la PROPIEDAD con un TXT por reclamación además del
+  apuntado (cierra el takeover de dominios colgantes); hostname único sólo entre activos.
+  `sitemap.xml` y `robots.txt` se sirven en la RAÍZ de cada dominio propio, con ese dominio como
+  base de las URLs (antes daban 404 y las `<loc>` salían con el host del backend).
+- **Rate limiting (ADR-026):** limiters con nombre; el `throttle` anónimo compartía un contador
+  por IP (causa real de los «login flaky» del E2E y de 404 en dominios propios con tráfico).
+- **Newsletter (ADR-027):** GET muestra / POST actúa, baja en un clic (RFC 8058), topes de
+  confirmaciones, envío como mucho una vez con reanudación, formulario que funciona sin JS.
+- **Editorial / portadas:** editores no tocan lo publicado o programado; re-publicar es no-op;
+  programación atómica (sin doble `EntryPublished`); fechas programadas en UTC; los menús omiten
+  entradas no publicadas; guardar una portada sin plan no deja cambios a medias.
+- **Higiene:** E2E aislado en el puerto 8100; dependencias actualizadas (`league/commonmark`,
+  vitest 4); quitada la ruta `/api/user` del skeleton (exponía el modelo crudo); el dev server del
+  renderer sólo acepta hosts `.test`/`.localhost`. Avisos de `pnpm audit` aceptados (sólo dev,
+  dentro de Nuxt, sin versión parcheada en rango): `simple-git` (devtools, deshabilitado),
+  `node-forge`, `braces`.
+
 ## Futuro (contemplado, no implementado)
 Multilenguaje completo, paywall, memberships, marketplace, plugins, headless API,
 white-label / agency mode, billing real (Stripe/Mercado Pago vía adapters).
