@@ -12,9 +12,10 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 /**
- * Superficie PÚBLICA de dominios (SIN auth, sólo-lectura, ADR-020). El hostname es único
- * global, así que la búsqueda es global (sin WorkspaceContext, withoutGlobalScopes). Sólo
- * los dominios `active` resuelven / pasan el tls-check — nunca los pendientes/fallidos.
+ * Superficie PÚBLICA de dominios (SIN auth, sólo-lectura, ADR-020). Un hostname ACTIVO es único
+ * en la plataforma (`active_hostname`, ADR-025), así que la búsqueda es global (sin
+ * WorkspaceContext, withoutGlobalScopes). Sólo los dominios `active` resuelven / pasan el
+ * tls-check — nunca las reclamaciones pendientes o fallidas.
  */
 final class PublicDomainController extends Controller
 {
@@ -54,9 +55,7 @@ final class PublicDomainController extends Controller
             return null;
         }
 
-        return SiteDomain::withoutGlobalScopes()
-            ->where('hostname', $host)
-            ->where('status', SiteDomain::STATUS_ACTIVE)
-            ->first();
+        // `active_hostname` sólo tiene valor si status = active (columna generada, UNIQUE).
+        return SiteDomain::withoutGlobalScopes()->where('active_hostname', $host)->first();
     }
 }

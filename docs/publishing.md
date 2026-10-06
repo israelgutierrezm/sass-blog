@@ -36,10 +36,13 @@ El published schema incluye SEO por página (meta title/description, canonical, 
 social image, schema.org/JSON-LD). Debe funcionar igual en SSR y en generación estática.
 `sitemap.xml` y `robots.txt` se generan en el build. Redirects y slug history se respetan.
 
-## Dominios (futuro)
+## Dominios (Fase 6, ADR-020 + ADR-025)
 
 `SiteDomain` con estados `pending/verifying/active/failed` y `ssl_status`. El dominio no se
-acopla a la Page. Verificación DNS/SSL automatizada llega en su fase.
+acopla a la Page. Activar exige probar la propiedad (TXT `_sassblog-verify` con el token de la
+reclamación) y el apuntado al ingress; el TLS lo emite el edge sólo para dominios `active`. En un
+dominio propio, el renderer sirve las páginas, `sitemap.xml` y `robots.txt` en la raíz, con ese
+dominio como base de las URLs.
 
 ## Alcance por fase
 

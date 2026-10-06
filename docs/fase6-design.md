@@ -3,6 +3,10 @@
 Fuente: `publishing.md` + **ADR-020**. Decisiones (forks aprobados): **Caddy on-demand TLS**
 gateado por ask-endpoint; **verificación por apuntado DNS**.
 
+> **Actualizado por ADR-025 (2026-10-06):** el apuntado ya no basta. Activar exige además el TXT
+> `_sassblog-verify.{hostname}` con el token de la reclamación; el hostname es único sólo entre
+> dominios activos y conectar deja la reclamación en `pending` hasta pulsar «Verificar».
+
 **Objetivo (vertical slice):** un tenant conecta `blog.acme.com` a su sitio, lo verifica
 apuntando DNS, y el sitio se sirve por ese dominio con HTTPS automático. El dominio es
 **enrutado** (`Host → site`) + una **máquina de estados** de verificación; el TLS lo resuelve el

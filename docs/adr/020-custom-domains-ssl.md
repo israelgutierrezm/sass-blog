@@ -1,6 +1,7 @@
 # ADR-020 — Dominios propios: enrutado por Host + SSL on-demand en el edge
 
-- Estado: Aceptada
+- Estado: Aceptada — **la verificación por apuntado DNS queda reemplazada por ADR-025**
+  (propiedad por TXT + unicidad sólo entre activos); el resto sigue vigente.
 - Fecha: 2026-09-13
 - Contexto de fase: FASE 6 (Dominios propios + SSL)
 - Complementa: ADR-003 (renderer Nuxt), ADR-006 (superficie pública), publishing.md
@@ -25,7 +26,8 @@ el TLS**. Van en ese orden.
   puede tener varios (apex + www) con uno `is_primary` y redirección del otro. Capability de plan
   `site.custom_domain` (Pro).
 
-- **Verificación por apuntado DNS.** El usuario apunta un **CNAME** (subdominio) o **A/ALIAS**
+- **Verificación por apuntado DNS.** *(Reemplazada por ADR-025: el apuntado es público y no
+  prueba quién lo configuró; ahora se exige además un TXT con el token de la reclamación.)* El usuario apunta un **CNAME** (subdominio) o **A/ALIAS**
   (apex) hacia nuestro ingress; un job `VerifyDomain` resuelve el hostname por un contrato
   inyectable `DnsResolver` (real en prod, fake en tests) y confirma que apunta a nosotros →
   `verifying → active`. El propio apuntado prueba el control. Reintentos con backoff; timeout →

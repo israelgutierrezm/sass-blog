@@ -24,11 +24,15 @@ final class DomainResource extends JsonResource
             'id' => $this->ulid,
             'hostname' => $this->hostname,
             'status' => $this->status,
+            // Por qué falló la última verificación: ownership | routing | taken (ADR-025).
+            'failure_reason' => $this->failure_reason,
             'ssl_status' => $this->ssl_status,
             'is_primary' => $this->is_primary,
             'verified_at' => $this->verified_at,
-            // Instrucciones de apuntado DNS para el admin.
+            // Registros DNS que el tenant debe publicar: TXT de propiedad + apuntado al ingress.
             'verification' => [
+                'txt_name' => $this->challengeName(),
+                'txt_value' => $this->challengeValue(),
                 'cname' => (string) config('sassblog.domains.ingress_cname'),
                 'ip' => $ip !== '' ? $ip : null,
             ],

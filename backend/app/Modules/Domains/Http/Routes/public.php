@@ -7,11 +7,11 @@ use Illuminate\Support\Facades\Route;
 
 /*
  * Superficie PÚBLICA de dominios (ADR-020). SIN auth (frontera de confianza, ADR-006),
- * sólo-lectura y con rate-limit. `resolve` lo consume el renderer (Host→sitio); `tls-check`
- * lo consume Caddy (on_demand_tls) antes de emitir cert — en producción se restringe a la
- * red del edge por infraestructura.
+ * sólo-lectura y con rate-limit POR HOST (limiter `domains-public`, ver DomainsServiceProvider):
+ * `resolve` lo consume el renderer (Host→sitio) y `tls-check` Caddy (on_demand_tls) antes de
+ * emitir cert, ambos desde una sola IP. En producción se restringe a la red del edge por infra.
  */
-Route::middleware('throttle:120,1')->group(function (): void {
+Route::middleware('throttle:domains-public')->group(function (): void {
     Route::get('public/domains/resolve', [PublicDomainController::class, 'resolve'])
         ->name('public.domains.resolve');
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Domains\Http\Requests;
 
+use App\Modules\Sites\Infrastructure\Models\Site;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -33,9 +34,16 @@ final class StoreDomainRequest extends FormRequest
      */
     public function rules(): array
     {
+        // El sitio de la ruta, dentro del workspace del contexto (global scope).
+        $site = Site::findByUlid((string) $this->route('site'));
+
         return [
-            // `hostname` ÚNICO en toda la plataforma (un dominio → un sitio).
-            'hostname' => ['required', 'string', 'max:253', 'regex:'.self::HOSTNAME_REGEX, Rule::unique('site_domains', 'hostname')],
+            // Único POR SITIO. Entre sitios pueden coexistir reclamaciones del mismo hostname: sólo
+            // una llega a `active`, la que demuestre la propiedad (ADR-025).
+            'hostname' => [
+                'required', 'string', 'max:253', 'regex:'.self::HOSTNAME_REGEX,
+                Rule::unique('site_domains', 'hostname')->where('site_id', $site?->id ?? 0),
+            ],
         ];
     }
 
@@ -46,7 +54,7 @@ final class StoreDomainRequest extends FormRequest
     {
         return [
             'hostname.regex' => 'Introduce un dominio válido (p.ej. blog.acme.com).',
-            'hostname.unique' => 'Ese dominio ya está en uso en la plataforma.',
+            'hostname.unique' => 'Ese dominio ya está conectado a este sitio.',
         ];
     }
 }

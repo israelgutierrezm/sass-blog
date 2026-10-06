@@ -17,13 +17,16 @@ const STATUS_LABEL: Record<string, string> = {
   pending: 'Pendiente', verifying: 'Verificando', active: 'Activo', failed: 'Falló',
 }
 
-function pending(): boolean {
-  return items.value.some((d) => d.status === 'pending' || d.status === 'verifying')
+// Qué corregir cuando la verificación falla (ADR-025).
+const FAILURE_HINT: Record<string, string> = {
+  ownership: 'No encontramos el registro TXT de verificación con el valor de abajo. Si acabas de crearlo, el DNS puede tardar en propagarse: vuelve a verificar en unos minutos.',
+  routing: 'El registro TXT está bien, pero el dominio aún no apunta a nuestro servidor (CNAME o A).',
+  taken: 'Este dominio ya está activo en otro sitio. Desconéctalo allí y vuelve a verificar.',
 }
 
-/** Un dominio de 2 etiquetas (acme.com) es apex → A/ALIAS; si no, subdominio → CNAME. */
-function isApex(host: string): boolean {
-  return host.split('.').length === 2
+/** Sólo se refresca solo mientras el job está corriendo (pending se queda esperando al usuario). */
+function verifying(): boolean {
+  return items.value.some((d) => d.status === 'verifying')
 }
 
 async function refresh(): Promise<void> {
@@ -32,7 +35,7 @@ async function refresh(): Promise<void> {
   } catch (e) {
     error.value = e instanceof ApiError ? e.first() : 'No se pudieron cargar los dominios'
   }
-  if (alive && pending()) {
+  if (alive && verifying()) {
     setTimeout(() => alive && refresh(), 4000)
   }
 }
@@ -115,18 +118,52 @@ async function act(fn: Promise<unknown>): Promise<void> {
           </div>
         </div>
 
-        <!-- Instrucciones de apuntado DNS mientras no esté activo. -->
-        <p v-if="d.status !== 'active'" class="mt-2 text-xs text-gray-500">
-          <template v-if="isApex(d.hostname) && d.verification.ip">
-            Añade un registro <strong>A</strong> de <span class="font-mono">{{ d.hostname }}</span> → <span class="font-mono">{{ d.verification.ip }}</span>
-          </template>
-          <template v-else>
-            Añade un <strong>CNAME</strong> de <span class="font-mono">{{ d.hostname }}</span> → <span class="font-mono">{{ d.verification.cname }}</span>
-          </template>
+        <p v-if="d.status === 'failed' && d.failure_reason" class="mt-2 text-xs text-red-600" :data-testid="`domain-failure-${d.id}`">
+          {{ FAILURE_HINT[d.failure_reason] }}
         </p>
 
+        <!-- Registros DNS que prueban la propiedad (TXT) y enrutan el tráfico (CNAME/A). -->
+        <div v-if="d.status !== 'active'" class="mt-3 rounded-md bg-gray-50 p-3 text-xs text-gray-600" :data-testid="`domain-dns-${d.id}`">
+          <p class="mb-2">Publica estos registros en el DNS de tu dominio y pulsa <strong>Verificar</strong>:</p>
+          <table class="w-full table-fixed">
+            <thead class="text-left text-gray-400">
+              <tr><th class="w-16 font-normal">Tipo</th><th class="font-normal">Nombre</th><th class="font-normal">Valor</th></tr>
+            </thead>
+            <tbody class="font-mono">
+              <tr>
+                <td>TXT</td>
+                <td class="select-all break-all pr-2" :data-testid="`domain-txt-name-${d.id}`">{{ d.verification.txt_name }}</td>
+                <td class="select-all break-all" :data-testid="`domain-txt-value-${d.id}`">{{ d.verification.txt_value }}</td>
+              </tr>
+              <tr>
+                <td>CNAME</td>
+                <td class="break-all pr-2">{{ d.hostname }}</td>
+                <td class="select-all break-all">{{ d.verification.cname }}</td>
+              </tr>
+              <tr v-if="d.verification.ip">
+                <td>A</td>
+                <td class="break-all pr-2">{{ d.hostname }}</td>
+                <td class="select-all break-all">{{ d.verification.ip }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="mt-2 text-gray-400">
+            El TXT demuestra que el dominio es tuyo: mantenlo publicado. Usa el CNAME para un
+            subdominio (blog.acme.com);
+            <template v-if="d.verification.ip">para el dominio raíz (acme.com), el registro A.</template>
+            <template v-else>para el dominio raíz (acme.com), un registro ALIAS/ANAME hacia {{ d.verification.cname }} si tu proveedor lo admite.</template>
+            Si tu panel DNS añade tu dominio al final del nombre, escribe sólo la parte que va antes.
+          </p>
+        </div>
+
         <div class="mt-3 flex gap-4 text-xs">
-          <button class="text-blue-600 hover:underline" :data-testid="`domain-recheck-${d.id}`" @click="act(domainsApi.recheck(ws, site, d.id))">Re-verificar</button>
+          <button
+            v-if="d.status !== 'active'"
+            class="text-blue-600 hover:underline disabled:cursor-wait disabled:text-gray-400 disabled:no-underline"
+            :disabled="d.status === 'verifying'"
+            :data-testid="`domain-recheck-${d.id}`"
+            @click="act(domainsApi.recheck(ws, site, d.id))"
+          >{{ d.status === 'verifying' ? 'Verificando…' : 'Verificar' }}</button>
           <button v-if="!d.is_primary" class="text-blue-600 hover:underline" :data-testid="`domain-primary-${d.id}`" @click="act(domainsApi.setPrimary(ws, site, d.id))">Hacer primario</button>
           <button class="text-gray-400 hover:text-red-600" :data-testid="`domain-del-${d.id}`" @click="act(domainsApi.remove(ws, site, d.id))">Quitar</button>
         </div>

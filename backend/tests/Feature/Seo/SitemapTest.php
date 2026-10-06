@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Domains\Infrastructure\Models\SiteDomain;
 use App\Modules\Sites\Application\CreateSite;
 use Database\Seeders\DatabaseSeeder;
 use Laravel\Sanctum\Sanctum;
@@ -69,4 +70,33 @@ it('aísla el sitemap entre sitios (el artículo de A no aparece en B)', functio
 
 it('404 para un sitio inexistente', function () {
     $this->get('/api/v1/public/sites/01ARZ3NDEKTSV4RRFFQ69G5FAV/sitemap.xml')->assertNotFound();
+});
+
+it('servido en un dominio propio ACTIVO del sitio (?host=), las <loc> usan ese dominio', function () {
+    ['ws' => $ws, 'site' => $site] = ownerWithSite();
+    withinWorkspace($ws, fn () => $site->update(['settings' => ['base_url' => 'https://mi-sitio.com']]));
+    publishedPage($ws, $site, '/acerca', 'Acerca');
+    withinWorkspace($ws, fn () => SiteDomain::factory()->active()->create(['site_id' => $site->id, 'hostname' => 'blog.acme.com']));
+
+    expect($this->get(sitemapUrl($site->ulid).'?host=Blog.ACME.com:443')->assertOk()->getContent())
+        ->toContain('<loc>https://blog.acme.com/acerca</loc>');
+
+    $this->get("/api/v1/public/sites/{$site->ulid}/robots.txt?host=blog.acme.com")
+        ->assertOk()
+        ->assertSee('Sitemap: https://blog.acme.com/sitemap.xml', false);
+});
+
+it('ignora un ?host= que no es un dominio activo de ESTE sitio (ni pendiente, ni ajeno, ni inventado)', function () {
+    ['ws' => $ws, 'site' => $site] = ownerWithSite('a@example.com');
+    ['ws' => $wsB, 'site' => $siteB] = ownerWithSite('b@example.com');
+    withinWorkspace($ws, fn () => $site->update(['settings' => ['base_url' => 'https://mi-sitio.com']]));
+    publishedPage($ws, $site, '/acerca', 'Acerca');
+    withinWorkspace($ws, fn () => SiteDomain::factory()->create(['site_id' => $site->id, 'hostname' => 'pendiente.acme.com']));
+    withinWorkspace($wsB, fn () => SiteDomain::factory()->active()->create(['site_id' => $siteB->id, 'hostname' => 'ajeno.acme.com']));
+
+    foreach (['pendiente.acme.com', 'ajeno.acme.com', 'evil.example'] as $host) {
+        expect($this->get(sitemapUrl($site->ulid)."?host={$host}")->assertOk()->getContent())
+            ->toContain('<loc>https://mi-sitio.com/acerca</loc>')
+            ->not->toContain($host);
+    }
 });

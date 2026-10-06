@@ -12,14 +12,18 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Dominio propio de un sitio (ADR-020). Enrutado (`hostname` → sitio) + máquina de estados
- * de verificación. `hostname` único global.
+ * Reclamación de un dominio propio por un sitio (ADR-020 + ADR-025). Enrutado (`hostname` →
+ * sitio) + máquina de estados de verificación. Activar exige PROPIEDAD (TXT con el token de esta
+ * reclamación) y enrutado (CNAME/A al ingress). Puede haber varias reclamaciones del mismo
+ * hostname, pero sólo UNA activa (columna generada `active_hostname`, UNIQUE).
  *
  * @property int $id
  * @property string $ulid
  * @property int $site_id
  * @property string $hostname
+ * @property string|null $active_hostname
  * @property string $status
+ * @property string|null $failure_reason
  * @property string $ssl_status
  * @property string $verification_token
  * @property bool $is_primary
@@ -41,6 +45,18 @@ final class SiteDomain extends Model
 
     public const STATUS_FAILED = 'failed';
 
+    /** Falta el TXT `_sassblog-verify` con el token de esta reclamación (ADR-025). */
+    public const FAILURE_OWNERSHIP = 'ownership';
+
+    /** El hostname no apunta (CNAME/A) al ingress. */
+    public const FAILURE_ROUTING = 'routing';
+
+    /** El hostname ya está activo en otro sitio: hay que desconectarlo allí primero. */
+    public const FAILURE_TAKEN = 'taken';
+
+    /** Etiqueta del registro TXT de propiedad: `_sassblog-verify.{hostname}`. */
+    public const CHALLENGE_LABEL = '_sassblog-verify';
+
     public const SSL_NONE = 'none';
 
     public const SSL_PROVISIONING = 'provisioning';
@@ -53,6 +69,7 @@ final class SiteDomain extends Model
         'site_id',
         'hostname',
         'status',
+        'failure_reason',
         'ssl_status',
         'verification_token',
         'verified_at',
@@ -77,6 +94,18 @@ final class SiteDomain extends Model
     public function isActive(): bool
     {
         return $this->status === self::STATUS_ACTIVE;
+    }
+
+    /** Nombre del registro TXT que prueba la propiedad del dominio. */
+    public function challengeName(): string
+    {
+        return self::CHALLENGE_LABEL.'.'.$this->hostname;
+    }
+
+    /** Valor esperado del TXT: lleva el token de ESTA reclamación (otro tenant tiene otro). */
+    public function challengeValue(): string
+    {
+        return 'sassblog-verify='.$this->verification_token;
     }
 
     protected static function newFactory(): SiteDomainFactory

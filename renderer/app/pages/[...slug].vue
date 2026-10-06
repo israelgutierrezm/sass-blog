@@ -49,10 +49,11 @@ const host = (import.meta.server ? useRequestHeaders(['host']).host : window.loc
 
 // Resolución del sitio: por Host (dominio propio, ADR-020) o por prefijo _site/{ulid}.
 // Dominio propio → rutas limpias en la raíz (linkBase ''); prefijo → linkBase /_site/{id}.
+// host → sitio va cacheado 60 s (resolveHostCached): no se consulta en cada visita.
 const { data: resolution } = await useAsyncData(`site:${host}:${segments.join('/')}`, async () => {
   if (isCustomHost(host, config.public.appHosts)) {
-    const r = await $fetch<{ data: { site: string } }>(`${base}/public/domains/resolve`, { query: { host } }).catch(() => null)
-    return r ? { siteId: r.data.site, path: pathFromSegments(segments), linkBase: '' } : null
+    const siteId = await resolveHostCached(host, (h) => lookupHost(base, h))
+    return siteId ? { siteId, path: pathFromSegments(segments), linkBase: '' } : null
   }
   const s = resolveSite(segments, config.public.reservedPrefix)
   return s.siteId ? { siteId: s.siteId, path: s.path, linkBase: `/${config.public.reservedPrefix}/${s.siteId}` } : null

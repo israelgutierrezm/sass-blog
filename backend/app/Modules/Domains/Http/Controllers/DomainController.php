@@ -20,7 +20,11 @@ use Illuminate\Support\Str;
 /**
  * CRUD de dominios propios, bajo /workspaces/{ws}/sites/{site}/domains. El stack (auth +
  * workspace + capability:site.custom_domain) lo aplica la ruta; la Policy exige
- * `domain.manage`. Conectar un dominio encola su verificación (nunca en el request).
+ * `domain.manage`.
+ *
+ * Conectar crea la reclamación en `pending` con su token: el tenant publica el TXT y el
+ * CNAME/A (ADR-025) y pulsa «Verificar», que encola la verificación (nunca en el request).
+ * Verificar al crear sería inútil: el TXT con un token recién generado no puede existir aún.
  */
 final class DomainController extends Controller
 {
@@ -45,18 +49,21 @@ final class DomainController extends Controller
         $domain->is_primary = SiteDomain::forSite($siteModel->id)->count() === 0;
         $domain->save();
 
-        VerifyDomain::dispatch($domain->id, $siteModel->workspace_id);
-
-        return (new DomainResource($domain))->response()->setStatusCode(201);
+        return (new DomainResource($domain->fresh()))->response()->setStatusCode(201);
     }
 
+    /**
+     * Verifica (o re-verifica) una reclamación no activa. Un dominio activo no se re-verifica
+     * desde aquí: bajarlo a `pending` lo dejaría sin servir mientras corre el job.
+     */
     public function recheck(Workspace $workspace, string $site, string $domain): DomainResource
     {
         $siteModel = $this->resolveSite($site);
         $domainModel = $this->resolveDomain($siteModel, $domain);
         $this->authorize('update', $domainModel);
+        abort_if($domainModel->isActive(), 422, 'El dominio ya está verificado.');
 
-        $domainModel->update(['status' => SiteDomain::STATUS_PENDING]);
+        $domainModel->update(['status' => SiteDomain::STATUS_VERIFYING, 'failure_reason' => null]);
         VerifyDomain::dispatch($domainModel->id, $siteModel->workspace_id);
 
         return new DomainResource($domainModel->fresh());

@@ -30,6 +30,16 @@ it('resolve da 404 para un dominio no activo o inexistente', function () {
     $this->getJson('/api/v1/public/domains/resolve?host=no-existe.com')->assertNotFound();
 });
 
+it('resolve ignora las reclamaciones no activas del mismo hostname (ADR-025)', function () {
+    [$wsA, $siteA] = builderSite();
+    [$wsB, $siteB] = builderSite();
+    withinWorkspace($wsB, fn () => SiteDomain::factory()->create(['site_id' => $siteB->id, 'hostname' => 'blog.acme.com'])); // pending ajena
+    withinWorkspace($wsA, fn () => SiteDomain::factory()->active()->create(['site_id' => $siteA->id, 'hostname' => 'blog.acme.com']));
+
+    $this->getJson('/api/v1/public/domains/resolve?host=blog.acme.com')->assertOk()->assertJsonPath('data.site', $siteA->ulid);
+    $this->get('/api/v1/public/domains/tls-check?domain=blog.acme.com')->assertOk();
+});
+
 it('tls-check da 200 SÓLO para dominios activos (gate de emisión de certs)', function () {
     [$ws, $site] = builderSite();
     withinWorkspace($ws, function () use ($site) {

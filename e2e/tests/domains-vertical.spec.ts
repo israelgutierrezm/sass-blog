@@ -1,11 +1,12 @@
 import { expect, test } from '@playwright/test'
 
 /**
- * El vertical de dominios propios de FASE 6, por el stack real (ADR-020):
+ * El vertical de dominios propios de FASE 6, por el stack real (ADR-020 + ADR-025):
  * login Pro (capability site.custom_domain) → site → publicar página '/' → conectar un
- * dominio → el job de verificación (cola sync + DOMAINS_AUTO_VERIFY, sin DNS real) lo deja
- * "Activo" → el renderer, ante una petición con ese Host, resuelve el sitio por Host
- * (/public/domains/resolve) y sirve la página a la raíz. Cierra el enrutado por dominio.
+ * dominio (queda "Pendiente" mostrando el TXT de propiedad y el CNAME) → "Verificar" → el job
+ * (cola sync + DOMAINS_AUTO_VERIFY, sin DNS real) lo deja "Activo" → el renderer, ante una
+ * petición con ese Host, resuelve el sitio por Host (/public/domains/resolve) y sirve la página
+ * a la raíz. Cierra el enrutado por dominio.
  */
 test('Conectar dominio → verificado → el renderer sirve el sitio por Host', async ({ page, request }) => {
   const heading = 'Sitio por Dominio Propio'
@@ -41,12 +42,17 @@ test('Conectar dominio → verificado → el renderer sirve el sitio por Host', 
   const ws = url.match(/\/w\/([^/]+)/)![1]
   const site = url.match(/\/s\/([^/]+)/)![1]
 
-  // --- Conectar el dominio (verificación inline: cola sync + auto_verify) ---
+  // --- Conectar el dominio: queda pendiente con los registros DNS a publicar ---
   await page.goto(`/w/${ws}/s/${site}/domains`)
   await page.getByTestId('domain-hostname').fill(hostname)
   await page.getByTestId('domain-connect').click()
 
-  // Queda "Activo" sin DNS real (AutoVerifyDnsResolver) y es el primario del sitio.
+  await expect(page.locator('[data-testid^="domain-status-"]').first()).toHaveText('Pendiente')
+  await expect(page.locator('[data-testid^="domain-txt-name-"]').first()).toHaveText(`_sassblog-verify.${hostname}`)
+  await expect(page.locator('[data-testid^="domain-txt-value-"]').first()).toContainText('sassblog-verify=')
+
+  // --- Verificar (inline: cola sync + AutoVerifyDnsResolver, sin DNS real) → "Activo" ---
+  await page.locator('[data-testid^="domain-recheck-"]').first().click()
   await expect(page.locator('[data-testid^="domain-status-"]').first()).toHaveText('Activo')
 
   // --- El renderer resuelve el sitio por Host y sirve la home a la raíz ---
@@ -56,4 +62,13 @@ test('Conectar dominio → verificado → el renderer sirve el sitio por Host', 
   expect(res.ok()).toBeTruthy()
   const html = await res.text()
   expect(html).toContain(heading)
+
+  // --- sitemap.xml y robots.txt en la RAÍZ del dominio propio, con ese dominio como base ---
+  const sitemap = await request.get('http://127.0.0.1:3000/sitemap.xml', { headers: { host: hostname } })
+  expect(sitemap.ok()).toBeTruthy()
+  expect(await sitemap.text()).toContain(`<loc>https://${hostname}/</loc>`)
+
+  const robots = await request.get('http://127.0.0.1:3000/robots.txt', { headers: { host: hostname } })
+  expect(robots.ok()).toBeTruthy()
+  expect(await robots.text()).toContain(`Sitemap: https://${hostname}/sitemap.xml`)
 })

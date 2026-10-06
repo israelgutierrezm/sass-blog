@@ -160,10 +160,13 @@ export interface DomainDto {
   id: string
   hostname: string
   status: string
+  /** Por qué falló la última verificación (ADR-025). */
+  failure_reason: 'ownership' | 'routing' | 'taken' | null
   ssl_status: string
   is_primary: boolean
   verified_at: string | null
-  verification: { cname: string; ip: string | null }
+  /** Registros DNS a publicar: TXT de propiedad + apuntado al ingress (CNAME, o A en el apex). */
+  verification: { txt_name: string; txt_value: string; cname: string; ip: string | null }
   created_at?: string
 }
 
@@ -252,6 +255,13 @@ export interface SubscriberDto {
   status: string
   confirmed_at: string | null
   created_at?: string
+}
+/** Conteo de suscriptores por estado (GET …/newsletter/subscribers/stats). */
+export interface SubscriberStatsDto {
+  pending: number
+  confirmed: number
+  unsubscribed: number
+  total: number
 }
 export interface CampaignDto {
   id: string
